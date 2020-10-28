@@ -1,3 +1,8 @@
+import streamlit as st
+import numpy as np
+import pandas as pd
+st.title('Venmo Requests Calculator')
+
 def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     """
     Returns lump sums to request using venmo
@@ -26,7 +31,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     
     precheck_sum = round(precheck_sum+tax+tip+misc_fees,2)
     if total != precheck_sum:
-        return f"You provided {total} as the total, but I calculated {precheck_sum}"
+        return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
     else:
         num_ppl = len(my_dic.keys())
         tip_perc = tip/total
@@ -46,35 +51,77 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
             request[key] = person_total
     
         if rounded_sum < total:
-            print(f"* After rounding the calculated sum is {rounded_sum}, but the total charged to your credit card was {total}")
             rounding_error = round((total - rounded_sum)/num_ppl,2)
             for key in request.keys():
                 request[key] += rounding_error
-            print(f"* Rounding error found and adjusted for by adding {rounding_error} to each person.")
             
             new_total = 0
             for key in request.keys():
                 new_total += request[key]
-            print(f"* Confirmed {new_total} accounted for")
+            with st.beta_expander(label='What just happened?'):
+                st.write(f"""
+                1. After rounding the calculated sum was ${round(rounded_sum,2)}, but the total charged to your credit card was ${round(total,2)}
+                    * Rounding error found and adjusted for by adding ${round(rounding_error,2)} to each person.
+                2. ${round(new_total,2)} has been accounted for""")
         elif rounded_sum > total:
-            return (f"Uh oh! My calculated venmo charge sum is {rounded_sum} but the receipt total was {total}")
+            return st.write(f"Uh oh! My calculated venmo charge sum is ${rounded_sum} but the receipt total was ${round(total,2)}")
         else:
-            print(f"The venmo charge sum is same as the receipt total, no rounding correction needed")
-        print("___________________________")
-        print('')
-        print('Venmo Requests:')
+            st.write(f"The venmo charge sum is same as the receipt total, no rounding correction needed")
+        st.write(
+            '''## Output
+### Venmo Requests: 
+How much to charge each person
+            ''')
+        output_money = {}
         for key in request.keys():
-            print(f'{key}: ${round(request[key],2)}')
-        print("___________________________")
-        print('')
-        print('Venmo Comments:')
+            output_money[key] = round(request[key],2)
+        output_money
+        st.write(
+            '''### Venmo Comments: 
+Copy and paste these into the venmo app
+            ''')
+        output_comment = {}
         for key in request.keys():
-            print(f'* {key}: food was ${round(sum(my_dic[key]),2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}')
-            
-receipt = str(input("Enter the name followed by the itemized food costs: "))
-total = float(input("Enter the amount charged to your credit card, including the tip: "))
-tip = float(input("Enter the amount tipped, in dollars not percentage: "))
-tax = float(input("Enter the amount taxed, in dollars not percentage: "))
-fees = float(input("Enter the total misc fees: "))
+            output_comment[key] = f'Food was ${round(sum(my_dic[key]),2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
+        output_comment
 
-venmo_requester(receipt, total=total, tax=tax, tip=tip, misc_fees=misc_fees)
+st.write('## User input')
+
+demo_receipt = '''Russell: 29, 10, 1
+Peter: 10,20.23, 1'''
+
+receipt_input = st.text_area(label="Add name and food prices",value=demo_receipt)
+
+col1, col2, col3 = st.beta_columns(3)
+
+with col1:
+    fees_input = st.number_input("Fees in dollars", 2.89)
+with col2:
+    tax_input = st.number_input("Tax in dollars", 10.23)
+with col3:
+    tip_input = st.number_input("Tip in dollars", 20)
+
+total_input = st.number_input("Total with Tip",104.35)
+
+# Receipt formatting
+splitted = receipt_input.split('\n')
+data = {}
+for line in splitted:
+    # get each line by itself, separate name from values
+    alone = line.split(':')
+    name = alone[0].replace(' ','')
+    
+    # create a list of numbers from string
+    alone[1] = alone[1].replace(' ','')
+    nums = alone[1].split(',')
+    new_list = [float(x) for x in nums]
+    
+    # data in dictionary
+    data[name] = new_list
+
+venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+
+# Fun stuff
+button = st.button(label='Awesome job!')
+if button == True:
+    st.balloons()
