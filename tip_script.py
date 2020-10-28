@@ -1,6 +1,4 @@
 import streamlit as st
-import numpy as np
-import pandas as pd
 st.title('Venmo Requests Calculator')
 
 def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
