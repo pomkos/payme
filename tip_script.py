@@ -1,6 +1,39 @@
 import streamlit as st
 st.title('Venmo Requests Calculator')
 
+def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
+    '''
+    Saves dataframe to bike_data.db by default
+    
+    input
+    -----
+    dataframe: df
+        Dataframe to save to sql
+    name: str
+        Name to save dataframe as
+    db: str
+        Name of database
+    folder: str
+        Location of database. Must end in backslash
+    if_exists: string
+        'fail' or 'replace', what to do if table name exists in db
+    index: bool
+        False if index should be dropped
+        True if index should be saved as new column
+    '''
+    import sqlalchemy as sq
+    from datetime import datetime
+    from pytz import timezone
+    tz = timezone('US/Eastern')
+    now = datetime.now(tz) 
+
+    dt_string = now.strftime("%m-%d-%Y %H:%M:%S")
+
+    location = folder + db
+    cnx = sq.create_engine(location)
+    dataframe.to_sql(name, con=cnx, if_exists=if_exists, index=index)
+    return f'Dataframe saved to {location} as {name} on {dt_string}'
+
 def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     """
     Returns lump sums to request using venmo
@@ -23,6 +56,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     request: dict
         Dictionary of name:amount, indicating how much to charge each person
     """
+    import pandas as pd
     precheck_sum = 0
     for key in my_dic.keys():
         precheck_sum += sum(my_dic[key])
@@ -44,7 +78,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
             tax_part = tax_perc * my_total
             tip_part = tip_perc * my_total
 
-            person_total = round(my_total + tax_part + fee_part + tip_part,2)
+            person_total = my_total + tax_part + fee_part + tip_part
             rounded_sum += person_total
             request[key] = person_total
     
@@ -72,8 +106,11 @@ How much to charge each person
             ''')
         output_money = {}
         for key in request.keys():
-            output_money[key] = round(request[key],2)
-        output_money
+            output_money[key] = [round(request[key],2)]
+        df_out = pd.DataFrame.from_dict(output_money)
+        df_out = df_out.reset_index(drop=True)
+        df_out
+        
         st.write(
             '''### Venmo Comments: 
 Copy and paste these into the venmo app
@@ -93,13 +130,13 @@ receipt_input = st.text_area(label="Add name and food prices",value=demo_receipt
 col1, col2, col3 = st.beta_columns(3)
 
 with col1:
-    fees_input = st.number_input("Fees in dollars", 2.89)
+    fees_input = st.number_input("Fees in dollars")
 with col2:
-    tax_input = st.number_input("Tax in dollars", 10.23)
+    tax_input = st.number_input("Tax in dollars")
 with col3:
-    tip_input = st.number_input("Tip in dollars", 20)
+    tip_input = st.number_input("Tip in dollars")
 
-total_input = st.number_input("Total with Tip",104.35)
+total_input = st.number_input("Total with Tip")
 
 # Receipt formatting
 splitted = receipt_input.split('\n')
@@ -120,6 +157,8 @@ for line in splitted:
 venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
 
 # Fun stuff
-button = st.button(label='Awesome job!')
+button = st.button(label='Submit to Database')
 if button == True:
     st.balloons()
+
+
