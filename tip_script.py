@@ -1,6 +1,15 @@
 import streamlit as st
 st.title('Venmo Requests Calculator')
 
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
     '''
     Saves dataframe to bike_data.db by default
