@@ -131,16 +131,7 @@ Copy and paste these into the venmo app
 
 st.write('## User input')
 
-## Demo
-with st.beta_expander(label='How To'):
-    st.write(f"""
-    1. Input the name and itemized money spent in the format of:
-        ```
-        Peter: 20.21,5.23, 3.21
-        Russell: 101.01, 15.89, 1.99
-        ```
-    2. Input the rest of the fees or tips as needed""")
-    
+   
 receipt_input = st.text_area(label="Add name and food prices")
             
 col1, col2, col3 = st.beta_columns(3)
@@ -158,20 +149,33 @@ total_input = st.number_input("Total with Tip")
 splitted = receipt_input.split('\n')
 data = {}
 for line in splitted:
-    # get each line by itself, separate name from values
-    alone = line.split(':')
-    name = alone[0].replace(' ','')
-    
-    # create a list of numbers from string
-    alone[1] = alone[1].replace(' ','')
-    nums = alone[1].split(',')
-    new_list = [float(x) for x in nums]
-    
-    # data in dictionary
-    data[name] = new_list
+    try:
+        # get each line by itself, separate name from values
+        alone = line.split(':')
+        name = alone[0].replace(' ','')
 
-venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+        # create a list of numbers from string
+        alone[1] = alone[1].replace(' ','')
+        nums = alone[1].split(',')
+        new_list = [float(x) for x in nums]
 
+        # data in dictionary
+        data[name] = new_list
+    except:
+        ## Demo
+        with st.beta_expander(label='How To'):
+            st.write(f"""
+            1. Input the name and itemized money spent in the format of:
+                ```
+                Peter: 20.21,5.23, 3.21
+                Russell: 101.01, 15.89, 1.99
+                ```
+            2. Input the rest of the fees or tips as needed""")
+
+try:
+    venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+except:
+    ''
 # Fun stuff
 button = st.button(label='Submit to Database')
 if button == True:
