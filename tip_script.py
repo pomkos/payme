@@ -131,11 +131,18 @@ Copy and paste these into the venmo app
 
 st.write('## User input')
 
-demo_receipt = '''Russell: 29, 10, 1
-Peter: 10,20.23, 1'''
-
-receipt_input = st.text_area(label="Add name and food prices",value=demo_receipt)
-
+## Demo
+with st.beta_expander(label='How To'):
+    st.write(f"""
+    1. Input the name and itemized money spent in the format of:
+        ```
+        Peter: 20.21,5.23, 3.21
+        Russell: 101.01, 15.89, 1.99
+        ```
+    2. Input the rest of the fees or tips as needed""")
+    
+receipt_input = st.text_area(label="Add name and food prices")
+            
 col1, col2, col3 = st.beta_columns(3)
 
 with col1:
