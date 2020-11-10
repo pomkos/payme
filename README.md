@@ -20,3 +20,14 @@ nohup streamlit run tip_script.py & # run in background
 You can exit the terminal and streamlit will continue serving the python file. 
 
 # Screenshot
+
+NOTE: The `Submit to Database` button is there for funsies only. Saving to database is not yet implemented.
+
+## Homepage
+![](initial_page.png?raw=true)
+
+## Sample Input
+![](sample_input.png?raw=true)
+
+## Sample Output
+![](sample_output.png?raw=true)
