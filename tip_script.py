@@ -130,7 +130,15 @@ Copy and paste these into the venmo app
         output_comment
 
 st.write('## User input')
-
+## Demo
+with st.beta_expander(label='How To'):
+    st.write(f"""
+    1. Input the name and itemized money spent in the format of:
+        ```
+        Peter: 20.21,5.23, 3.21
+        Russell: 101.01, 15.89, 1.99
+        ```
+    2. Input the rest of the fees or tips as needed""")
    
 receipt_input = st.text_area(label="Add name and food prices")
             
@@ -162,15 +170,7 @@ for line in splitted:
         # data in dictionary
         data[name] = new_list
     except:
-        ## Demo
-        with st.beta_expander(label='How To'):
-            st.write(f"""
-            1. Input the name and itemized money spent in the format of:
-                ```
-                Peter: 20.21,5.23, 3.21
-                Russell: 101.01, 15.89, 1.99
-                ```
-            2. Input the rest of the fees or tips as needed""")
+        ''
 
 try:
     venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
