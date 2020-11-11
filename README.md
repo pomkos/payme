@@ -24,10 +24,10 @@ You can exit the terminal and streamlit will continue serving the python file.
 NOTE: The `Submit to Database` button is there for funsies only. Saving to database is not yet implemented.
 
 ## Homepage
-![](initial_page.png?raw=true)
+![](images/initial_page.png?raw=true)
 
 ## Sample Input
-![](sample_input.png?raw=true)
+![](images/sample_input.png?raw=true)
 
 ## Sample Output
-![](sample_output.png?raw=true)
+![](images/sample_output.png?raw=true)
