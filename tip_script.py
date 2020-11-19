@@ -76,7 +76,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     else:
         num_ppl = len(my_dic.keys())
         tax_perc = tax/total
-        tip_perc = tip/(total-tax)
+        tip_perc = tip/(total-tax-misc_fees)
         fee_part = misc_fees/num_ppl
         request = {}
         rounded_sum = 0
