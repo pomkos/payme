@@ -75,8 +75,8 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
         return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
     else:
         num_ppl = len(my_dic.keys())
-        tip_perc = tip/total
         tax_perc = tax/total
+        tip_perc = tip/(total-tax)
         fee_part = misc_fees/num_ppl
         request = {}
         rounded_sum = 0
