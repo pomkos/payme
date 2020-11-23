@@ -84,13 +84,13 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
             my_list = my_dic[key]
 
             my_total = sum(my_list)
-            tax_part = round(tax_perc * my_total,2)
-            tip_part = round(tip_perc * my_total,2)
+            tax_part = tax_perc * my_total
+            tip_part = tip_perc * my_total
 
             person_total = my_total + tax_part + fee_part + tip_part
             rounded_sum += person_total
             request[key] = person_total
-    
+        rounded_sum = round(rounded_sum,2)
         if rounded_sum < total:
             rounding_error = round((total - rounded_sum)/num_ppl,2)
             for key in request.keys():
