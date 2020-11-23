@@ -189,7 +189,7 @@ for (people, amount) in raw_pairs:
     for person in [person.capitalize() for person in people]:
       if len(people) > 1:
         amount = amount / len(people)
-      if not person in expanded_pairs:
+      if not person in data:
           data[person] = amount
       else:
           data[person] += amount
