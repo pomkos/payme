@@ -153,27 +153,47 @@ with col3:
     tip_input = st.number_input("Tip in dollars",step=1.0)
 
 # Receipt formatting
-splitted = receipt_input.split('\n')
+
+pattern = '((?:[A-Za-z ,:])+)((?:[\\d.]+[, ]*)+)'
+# (                name group with optional space, colon, and comma
+#   (?:               
+#     [A-Za-z ,:]  capture all alpha which includes "and"
+#   )+             one or more times
+# )  
+# (                number group mathching numbers separated by comma or space
+#   (?:         
+#     [\\d.]+[, ]* (sorry eruopeans)
+#   )+
+# )
+
+# split string on the delimiters: and <space> : ,
+def parse_alpha(alpha):
+    return list(filter(None, re.split('(?:and| |:|,)+', alpha)))
+
+# split string on the decimal
+def parse_numbers(numbers):
+    return list(filter(None, re.split('(?:[^\\d\\.])', numbers)))
+
+# a dictionary of name(s) and sum of amount
+raw_pairs = [
+    (
+        parse_alpha(alpha),
+        sum([float(i) for i in parse_numbers(numbers)])
+    ) for (alpha, numbers) in re.findall(pattern, test)
+]
+
+# combine all split costs with the people involved
 data = {}
-for line in splitted:
-    try:
-        # get each line by itself, separate name from values
-        alone = line.split(':')
-        name = alone[0].replace(' ','')
+for (people, amount) in raw_pairs:
+    for person in [person.capitalize() for person in people]:
+      if len(people) > 1:
+        amount = amount / len(people)
+      if not person in expanded_pairs:
+          data[person] = amount
+      else:
+          data[person] += amount
 
-        # create a list of numbers from string
-        alone[1] = alone[1].replace(' ','')
-        nums = alone[1].split(',')
-        new_list = [float(x) for x in nums]
-
-        # data in dictionary
-        data[name] = new_list
-    except:
-        ''
-precheck_sum = 0
-for key in data.keys():
-    precheck_sum += sum(data[key])
-    
+precheck_sum = sum(data.values)
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
 try:
