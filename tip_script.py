@@ -134,10 +134,20 @@ st.write('## User input')
 ## Demo
 with st.beta_expander(label='How To'):
     st.write(f"""
-    1. Input the name and itemized money spent in the format of:
+    1. Input the name and itemized money spent in a format of:
         ```
         Peter: 20.21,5.23, 3.21
         Russell: 101.01, 15.89, 1.99
+        ```
+        Or on a single line:
+        ```
+        Peter 20.21 5.23 3.21 Russell 101.01 15.89 1.99
+        ```
+        Or with a split cost (Peter and Russell pay 8 each)
+        ```
+        Peter and Russell 16
+        Peter: 20.21, 5.23
+        Russell 101.01 15.89 1.99
         ```
     2. Input the rest of the fees or tips as needed""")
    
