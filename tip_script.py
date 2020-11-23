@@ -206,8 +206,10 @@ for (people, amount) in raw_pairs:
 precheck_sum = sum(data.values())
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
-venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-
+try:
+    venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+except:
+    ''
 # Fun stuff
 button = st.button(label='Submit to Database')
 if button == True:
