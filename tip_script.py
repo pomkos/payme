@@ -154,6 +154,7 @@ with col3:
 
 # Receipt formatting
 
+import re
 pattern = '((?:[A-Za-z ,:])+)((?:[\\d.]+[, ]*)+)'
 # (                name group with optional space, colon, and comma
 #   (?:               
