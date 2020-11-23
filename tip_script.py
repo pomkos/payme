@@ -66,12 +66,9 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
         Dictionary of name:amount, indicating how much to charge each person
     """
     import pandas as pd
-    precheck_sum = 0
-    for key in my_dic.keys():
-        precheck_sum += my_dic[key]
-    
-    precheck_sum = round(precheck_sum+tax+tip+misc_fees,2)
-    total = round(total,2)
+   
+    precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees,2)
+    total = round(total,2) # otherwise get weird 23.00000005 raw totals
     if total != precheck_sum:
         return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
     else:
@@ -90,8 +87,8 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
             person_total = my_total + tax_part + fee_part + tip_part
             rounded_sum += person_total
             request[key] = person_total
-        rounded_sum = round(rounded_sum,2)
-        if rounded_sum < total:
+        # rounded_sum = round(rounded_sum,2)
+        if (rounded_sum < total+0.1) | (rounded_sum > total-0.1):
             rounding_error = round((total - rounded_sum)/num_ppl,2)
             for key in request.keys():
                 request[key] += rounding_error
@@ -180,7 +177,7 @@ pattern = '((?:[A-Za-z ,:])+)((?:[\\d.]+[, ]*)+)'
 def parse_alpha(alpha):
     return list(filter(None, re.split('(?:and| |:|,)+', alpha)))
 
-# split string on the decimal
+# split "12.2 12.3 56 53.2" -> "[12.2,12.3,56,53.2]"
 def parse_numbers(numbers):
     return list(filter(None, re.split('(?:[^\\d\\.])', numbers)))
 
@@ -197,17 +194,17 @@ data = {}
 for (people, amount) in raw_pairs:
     for person in people:
         if not person in data:
-            data[person] = amount/len(people)
+            data[person] = round(amount/len(people),2)
         else:
-            data[person] += amount/len(people)
+            data[person] += round(amount/len(people),2)
 
 precheck_sum = sum(data.values())
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
-try:
-    venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-except:
-    ''
+data
+
+venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+
 # Fun stuff
 button = st.button(label='Submit to Database')
 if button == True:
