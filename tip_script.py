@@ -128,6 +128,7 @@ Copy and paste these into the venmo app
         output_comment = {}
         for key in request.keys():
             output_comment[key] = f'Food was ${round(sum(my_dic[key]),2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
+        output_comment
 
 st.write('## User input')
 ## Demo
