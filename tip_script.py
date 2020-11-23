@@ -172,7 +172,7 @@ precheck_sum = 0
 for key in data.keys():
     precheck_sum += sum(data[key])
     
-total_input = st.number_input("Total with Tip",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
+total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
 try:
     venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
