@@ -8,7 +8,7 @@ footer {visibility: hidden;}
 </style>
 
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
     '''
@@ -127,7 +127,6 @@ Copy and paste these into the venmo app
         output_comment = {}
         for key in request.keys():
             output_comment[key] = f'Food was ${round(sum(my_dic[key]),2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
-        output_comment
 
 st.write('## User input')
 ## Demo
@@ -145,13 +144,11 @@ receipt_input = st.text_area(label="Add name and food prices")
 col1, col2, col3 = st.beta_columns(3)
 
 with col1:
-    fees_input = st.number_input("Fees in dollars")
+    fees_input = st.number_input("Fees in dollars",step=1.0)
 with col2:
-    tax_input = st.number_input("Tax in dollars")
+    tax_input = st.number_input("Tax in dollars",step=1.0)
 with col3:
-    tip_input = st.number_input("Tip in dollars")
-
-total_input = st.number_input("Total with Tip")
+    tip_input = st.number_input("Tip in dollars",step=1.0)
 
 # Receipt formatting
 splitted = receipt_input.split('\n')
@@ -171,6 +168,11 @@ for line in splitted:
         data[name] = new_list
     except:
         ''
+precheck_sum = 0
+for key in data.keys():
+    precheck_sum += sum(data[key])
+    
+total_input = st.number_input("Total with Tip",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
 try:
     venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
@@ -180,5 +182,3 @@ except:
 button = st.button(label='Submit to Database')
 if button == True:
     st.balloons()
-
-
