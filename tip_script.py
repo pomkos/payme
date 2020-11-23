@@ -179,7 +179,7 @@ raw_pairs = [
     (
         parse_alpha(alpha),
         sum([float(i) for i in parse_numbers(numbers)])
-    ) for (alpha, numbers) in re.findall(pattern, test)
+    ) for (alpha, numbers) in re.findall(pattern, receipt_input)
 ]
 
 # combine all split costs with the people involved
