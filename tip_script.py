@@ -195,13 +195,11 @@ raw_pairs = [
 # combine all split costs with the people involved
 data = {}
 for (people, amount) in raw_pairs:
-    for person in [person.capitalize() for person in people]:
-        if len(people) > 1:
-            amount = amount / len(people)
+    for person in people:
         if not person in data:
-            data[person] = amount
+            data[person] = amount/len(people)
         else:
-            data[person] += amount
+            data[person] += amount/len(people)
 
 precheck_sum = sum(data.values())
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
