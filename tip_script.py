@@ -71,7 +71,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
         precheck_sum += sum(my_dic[key])
     
     precheck_sum = round(precheck_sum+tax+tip+misc_fees,2)
-    if total != precheck_sum:
+    if round(total,2) != precheck_sum:
         return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
     else:
         num_ppl = len(my_dic.keys())
