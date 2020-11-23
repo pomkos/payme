@@ -68,7 +68,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     import pandas as pd
     precheck_sum = 0
     for key in my_dic.keys():
-        precheck_sum += sum(my_dic[key])
+        precheck_sum += my_dic[key]
     
     precheck_sum = round(precheck_sum+tax+tip+misc_fees,2)
     total = round(total,2)
@@ -82,9 +82,8 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
         request = {}
         rounded_sum = 0
         for key in my_dic.keys():        
-            my_list = my_dic[key]
+            my_total = my_dic[key]
 
-            my_total = sum(my_list)
             tax_part = tax_perc * my_total
             tip_part = tip_perc * my_total
 
@@ -127,30 +126,30 @@ Copy and paste these into the venmo app
             ''')
         output_comment = {}
         for key in request.keys():
-            output_comment[key] = f'Food was ${round(sum(my_dic[key]),2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
+            output_comment[key] = f'Food was ${round(my_dic[key],2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
         output_comment
 
 st.write('## User input')
 ## Demo
 with st.beta_expander(label='How To'):
     st.write(f"""
-    1. Input the name and itemized money spent in a format of:
-        ```
-        Peter: 20.21,5.23, 3.21
-        Russell: 101.01, 15.89, 1.99
-        ```
-        Or on a single line:
-        ```
-        Peter 20.21 5.23 3.21 Russell 101.01 15.89 1.99
-        ```
-        Or with a split cost (Peter and Russell pay 8 each)
-        ```
-        Peter and Russell 16
-        Peter: 20.21, 5.23
-        Russell 101.01 15.89 1.99
-        ```
-    2. Input the rest of the fees or tips as needed""")
-   
+        1. Input the name and itemized money spent in a format of:
+            ```
+            Peter: 20.21,5.23, 3.21
+            Russell: 101.01, 15.89, 1.99
+            ```
+            Or on a single line:
+            ```
+            Peter 20.21 5.23 3.21 Russell 101.01 15.89 1.99
+            ```
+            Or with a split cost (Peter and Russell pay 8 each)
+            ```
+            Peter and Russell 16
+            Peter: 20.21, 5.23
+            Russell 101.01 15.89 1.99
+            ```
+        2. Input the rest of the fees or tips as needed""")
+    
 receipt_input = st.text_area(label="Add name and food prices")
             
 col1, col2, col3 = st.beta_columns(3)
@@ -177,7 +176,7 @@ pattern = '((?:[A-Za-z ,:])+)((?:[\\d.]+[, ]*)+)'
 #   )+
 # )
 
-# split string on the delimiters: and <space> : ,
+# split string on the delimiters: 'and' '<space>' ':' ','
 def parse_alpha(alpha):
     return list(filter(None, re.split('(?:and| |:|,)+', alpha)))
 
@@ -197,20 +196,18 @@ raw_pairs = [
 data = {}
 for (people, amount) in raw_pairs:
     for person in [person.capitalize() for person in people]:
-      if len(people) > 1:
-        amount = amount / len(people)
-      if not person in data:
-          data[person] = amount
-      else:
-          data[person] += amount
+        if len(people) > 1:
+            amount = amount / len(people)
+        if not person in data:
+            data[person] = amount
+        else:
+            data[person] += amount
 
 precheck_sum = sum(data.values())
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
-try:
-    venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-except:
-    ''
+venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+
 # Fun stuff
 button = st.button(label='Submit to Database')
 if button == True:
