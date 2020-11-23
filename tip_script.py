@@ -194,7 +194,7 @@ for (people, amount) in raw_pairs:
       else:
           data[person] += amount
 
-precheck_sum = sum(data.values)
+precheck_sum = sum(data.values())
 total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
 
 try:
