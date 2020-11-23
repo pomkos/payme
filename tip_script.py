@@ -15,7 +15,7 @@ footer {visibility: hidden;}
 </script>
 
 """
-# st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
     '''
