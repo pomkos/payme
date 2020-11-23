@@ -2,10 +2,6 @@ import streamlit as st
 st.title('Venmo Requests Calculator')
 
 hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-</style>
 <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
 <script>
   function addDarkmodeWidget() {
@@ -15,7 +11,7 @@ footer {visibility: hidden;}
 </script>
 
 """
-# st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
     '''
