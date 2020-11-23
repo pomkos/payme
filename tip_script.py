@@ -101,7 +101,7 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
                 new_total += request[key]
             with st.beta_expander(label='What just happened?'):
                 st.write(f"""
-                1. After rounding the calculated sum was ${round(rounded_sum,2)}, but the total charged to your credit card was ${round(total,2)}
+                1. After rounding the calculated sum was ${rounded_sum}, but the total charged to your credit card was ${round(total,2)}
                     * Rounding error found and adjusted for by adding ${round(rounding_error,2)} to each person.
                 2. ${round(new_total,2)} has been accounted for""")
         elif rounded_sum > total:
