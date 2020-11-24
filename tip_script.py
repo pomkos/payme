@@ -268,9 +268,11 @@ total_input = st.number_input("Calculated Total",step=1.0,value=round(precheck_s
 try:
     # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
     my_total, my_food, tip_perc, tax_perc, fee_part = venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-except Exception as e:
-    e
+    
 ##### LIVE TESTING AREA #####
+
+except Exception as e:
+    ''
 
 #############################
     
