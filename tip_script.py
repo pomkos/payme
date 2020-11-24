@@ -94,7 +94,7 @@ class saveInfo():
         return pd.read_sql_table('payme_now',self.engine,parse_dates='date')
 
 
-def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
+def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
     """
     Returns lump sums to request using venmo
     
@@ -156,38 +156,53 @@ def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
             return st.write(f"Uh oh! My calculated venmo charge sum is ${rounded_sum} but the receipt total was ${round(total,2)}")
         else:
             st.write(f"The venmo charge sum is same as the receipt total, no rounding correction needed")
-        st.write(
-            '''## Output
-### Venmo Requests: 
-How much to charge each person
-            ''')
         output_money = {}
         for key in request.keys():
             output_money[key] = [round(request[key],2)]
         df_out = pd.DataFrame.from_dict(output_money)
         df_out = df_out.reset_index(drop=True)
-        df_out
         
-        st.write(
-            '''### Venmo Comments: 
-Copy and paste these into the venmo app
+        venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out)
+        
+        return output_money, my_dic, tip_perc, tax_perc, fee_part
+
+def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out):
+    '''
+    Generate a link that directs user to venmo app with prefilled options
+    '''
+    st.write('## Output')
+    
+    col_out1,col_out2 = st.beta_columns(2)
+    with col_out1:
+        st.write('### Preview:')
+        st.write('Who paid how much?')
+        df_out
+    with col_out2:
+        st.write('''
+    ### Venmo Requests: 
+    Get your :dollar: back! :smile:
             ''')
-        output_comment = {}
+        link_output = []
         for key in request.keys():
-            statement = f'Food was ${str(round(my_dic[key],2))}'
-            
+            txn = 'charge' # charge or pay
+            audience = 'private' # private, friends, or public
+            amount = request[key] # total requested dollars
+
+            # statement construction
+            statement = f'Hi {key}! Food was ${str(round(my_dic[key],2))}'
             if tip > 0.0:
                 statement += f', tip was {str(round(tip_perc*100,2))}%'
             if tax > 0.0:
                 statement += f', tax was {str(round(tax_perc*100,2))}%'
             if misc_fees > 0.0:
                 statement += f', fees were ${str(round(fee_part,2))}'
-                
-            statement += '. Made with <3 by payme.peti.work (:'
-            output_comment[key] = statement
-        output_comment
-        
-        return output_money, my_dic, tip_perc, tax_perc, fee_part
+
+            statement += '.%0AMade with < 3 by payme.peti.work' # %0A creates a new line
+            statement = statement.replace(' ','%20') # replace spaces for url parameter
+
+            link = f"[Click me for {key}'s sake!](https://venmo.com/?txn={txn}&audience={audience}&amount={amount}&note={statement})"
+            #link_output.append(link)
+            st.write(f"* {link}")
 
 st.write('## User input')
 ## Demo
@@ -266,12 +281,12 @@ total_input = st.number_input("Calculated Total",step=1.0,value=round(precheck_s
 
 try:
     # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
-    my_total, my_food, tip_perc, tax_perc, fee_part = venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+    my_total, my_food, tip_perc, tax_perc, fee_part = venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
     
 ##### LIVE TESTING AREA #####
 
 except Exception as e:
-    ''
+    e
 
 #############################
     
