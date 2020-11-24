@@ -327,7 +327,7 @@ except Exception as e:
     
 # Fun stuff
 
-with st.beta_expander(label='Not required, but very fun'):
+with st.beta_expander(label='Not required, but very fun', expanded=True):
     col_save,col_middle, col_show = st.beta_columns([6,8,6])
 
     with col_show:
