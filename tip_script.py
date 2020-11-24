@@ -18,7 +18,7 @@ footer {visibility: hidden;}
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 class saveInfo():
-    def __init__(self, my_total, my_food, tip_perc, tax_perc, fee_part):
+    def __init__(self, my_total=0, my_food=0, tip_perc=0, tax_perc=0, fee_part=0,showme='yes'):
         '''
         Initialize the sqlite database
         
@@ -42,40 +42,39 @@ class saveInfo():
         # initialize engine
         engine = sq.create_engine('sqlite:///payme.db')
         meta = sq.MetaData()
-        
-        # table format in db
-        self.payme_now = sq.Table(
-           'payme_now', meta, 
-           sq.Column('id', sq.Integer, primary_key = True), 
-           sq.Column('date',sq.DateTime),
-           sq.Column('name', sq.String), 
-           sq.Column('food', sq.Float),
-           sq.Column('tip',sq.Float),
-           sq.Column('tax',sq.Float),
-           sq.Column('fees',sq.Float),
-           sq.Column('total',sq.Float)
-        )
-        
-        # format data into proper list of dictionaries
-        tz = timezone('US/Eastern')
-        result = []
-        
-        for key in my_total.keys():
-            person = {
-                'date':dt.datetime.now(tz),
-                'name':key,
-                'food':my_food[key],
-                'tip':round(my_food[key] * tip_perc,2),
-                'tax':round(my_food[key] * tax_perc,2),
-                'fees':fee_part,
-                'total':my_total[key][0] # its a dictionary of lists, with each list having only the total
-            }
-            
-            result.append(person)
-        
+        if showme=='no':
+            # table format in db
+            self.payme_now = sq.Table(
+               'payme_now', meta, 
+               sq.Column('id', sq.Integer, primary_key = True), 
+               sq.Column('date',sq.DateTime),
+               sq.Column('name', sq.String), 
+               sq.Column('food', sq.Float),
+               sq.Column('tip',sq.Float),
+               sq.Column('tax',sq.Float),
+               sq.Column('fees',sq.Float),
+               sq.Column('total',sq.Float)
+            )
+
+            # format data into proper list of dictionaries
+            tz = timezone('US/Eastern')
+            result = []
+
+            for key in my_total.keys():
+                person = {
+                    'date':dt.datetime.now(tz),
+                    'name':key,
+                    'food':my_food[key],
+                    'tip':round(my_food[key] * tip_perc,2),
+                    'tax':round(my_food[key] * tax_perc,2),
+                    'fees':fee_part,
+                    'total':my_total[key][0] # its a dictionary of lists, with each list having only the total
+                }
+
+                result.append(person)
+            self.result = result
         meta.create_all(engine) # not sure why its needed, but its in the tutorial so ... :shrug:
         self.engine = engine
-        self.result = result
         
     def save_table(self):
         '''
@@ -281,11 +280,12 @@ button_save = st.button(label='Submit to Database')
 button_show = st.button(label='Show the Database')
 
 if button_save == True:
-    saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part)
+    saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
     saveus.save_table()
     st.balloons()
     
 if button_show == True:
-    showus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part)
+    showus = saveInfo()
     dataframe = showus.read_table()
-    dataframe
+    show_me = dataframe.tail()
+    show_me
