@@ -34,13 +34,25 @@ crontab -e
 @reboot /home/peter/scripts/payme.sh #add this line at the bottom
 ```
 
-# Screenshot
+# Screenshots
 
 ## Homepage
 ![](images/initial_page.png?raw=true)
 
+### How To
+![](images/how_to.png?raw=true)
+
 ## Sample Input
 ![](images/sample_input.png?raw=true)
 
+### What Happened?
+![](images/what_happened.png?raw=true)
+
 ## Sample Output
 ![](images/sample_output.png?raw=true)
+
+### Database Preview
+![](images/database.png?raw=true)
+
+### Venmo Preview
+![](images/venmo.png?raw=true)
