@@ -169,15 +169,14 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
 def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out):
     '''
     Generate a link that directs user to venmo app with prefilled options
+    
+    ASCII table source: http://www.asciitable.com/
+    Use Hx column, add a % before it
     '''
     st.write('## Output')
     
     col_out1,col_out2 = st.beta_columns(2)
     with col_out1:
-        st.write('### Preview:')
-        st.write('Who paid how much?')
-        df_out
-    with col_out2:
         st.write('''
     ### Venmo Requests: 
     Get your :dollar: back! :smile:
@@ -189,20 +188,26 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
             amount = request[key] # total requested dollars
 
             # statement construction
-            statement = f'Hi {key}! Food was ${str(round(my_dic[key],2))}'
+            statement = f'Hi {key}! Food was ${round(my_dic[key],2)}'
             if tip > 0.0:
-                statement += f', tip was {str(round(tip_perc*100,2))}%'
+                statement += f', tip was {round(tip_perc*100,2)}%25'
             if tax > 0.0:
-                statement += f', tax was {str(round(tax_perc*100,2))}%'
+                statement += f', tax was {round(tax_perc*100,2)}%25'
             if misc_fees > 0.0:
-                statement += f', fees were ${str(round(fee_part,2))}'
+                statement += f', fees were {round(fee_part,2)}'
 
-            statement += '.%0AMade with < 3 by payme.peti.work' # %0A creates a new line
+            statement += '.%0AMade with %3C3 at payme.peti.work' # %0A creates a new line
             statement = statement.replace(' ','%20') # replace spaces for url parameter
 
             link = f"[Click me for {key}'s sake!](https://venmo.com/?txn={txn}&audience={audience}&amount={amount}&note={statement})"
             #link_output.append(link)
             st.write(f"* {link}")
+    with col_out2:
+        st.write('### Preview:')
+        st.write('Who paid how much?')
+        df_out = df_out.T
+        df_out.columns = ['Amount']
+        df_out
 
 st.write('## User input')
 ## Demo
@@ -270,7 +275,7 @@ raw_pairs = [
 # combine all split costs with the people involved
 data = {}
 for (people, amount) in raw_pairs:
-    for person in people:
+    for person in [person.capitalize() for person in people]:
         if not person in data:
             data[person] = round(amount/len(people),2)
         else:
@@ -286,13 +291,16 @@ try:
 ##### LIVE TESTING AREA #####
 
 except Exception as e:
-    ''
+    e
 
 #############################
     
 # Fun stuff
-button_save = st.button(label='Submit to Database')
-button_show = st.button(label='Show the Database')
+col_save, col_show = st.beta_columns(2)
+with col_save:
+    button_save = st.button(label='Submit to Database')
+with col_show:
+    button_show = st.button(label='Show the Database')
 
 if button_save == True:
     saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
