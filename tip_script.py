@@ -286,7 +286,7 @@ try:
 ##### LIVE TESTING AREA #####
 
 except Exception as e:
-    'There was some error, please let Pete know!'
+    ''
 
 #############################
     
