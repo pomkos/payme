@@ -1,4 +1,5 @@
 import streamlit as st
+
 st.title('Venmo Requests Calculator')
 
 hide_streamlit_style = """
@@ -125,7 +126,7 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
     else:
         num_ppl = len(my_dic.keys())
         tax_perc = tax/(total-tip-misc_fees-tax)
-        tip_perc = tip/(total-tax-misc_fees-tip)
+        tip_perc = tip/(total-tip-misc_fees-tax)
         fee_part = round(misc_fees/num_ppl,2)
         request = {}
         rounded_sum = 0
@@ -138,33 +139,56 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
             person_total = my_total + tax_part + fee_part + tip_part
             rounded_sum += person_total
             request[key] = person_total
-        # rounded_sum = round(rounded_sum,2)
-        if (rounded_sum < total+0.1) | (rounded_sum > total-0.1):
-            rounding_error = round((total - rounded_sum)/num_ppl,2)
-            for key in request.keys():
-                request[key] += rounding_error
-            
-            new_total = 0
-            for key in request.keys():
-                new_total += request[key]
-            with st.beta_expander(label='What just happened?'):
-                st.write(f"""
-                1. After rounding the calculated sum was ${rounded_sum}, but the total charged to your credit card was ${round(total,2)}
-                    * Rounding error found and adjusted for by adding ${round(rounding_error,2)} to each person.
-                2. ${round(new_total,2)} has been accounted for""")
-        elif rounded_sum > total:
+        ### Explain the calculation for transparency ###
+        with st.beta_expander(label='What just happened?'):
+            st.write(f"""
+            1. Tax% ($p_x$) was calculated using tax/(food_total): {round(tax_perc*100,2)}%
+            2. Tip% ($p_p$) was calculated using tip/(food_total): {round(tip_perc*100,2)}%
+            3. Fees were distributed equally: ${fee_part}
+            4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f$
+                * $m_t$ = total money to request
+                * $d_s$ = dollars spent on food
+                * $p_x$ = percent tax
+                * $p_p$ = percent tip
+                * $d_f$ = dollars spent on fee
+            """)
+        rounded_sum = round(rounded_sum,2)
+        ### Error catcher ###
+        if (rounded_sum > total+0.1):
             return st.write(f"Uh oh! My calculated venmo charge sum is ${rounded_sum} but the receipt total was ${round(total,2)}")
-        else:
-            st.write(f"The venmo charge sum is same as the receipt total, no rounding correction needed")
+            
+        ### Format the output ###
         output_money = {}
         for key in request.keys():
             output_money[key] = [round(request[key],2)]
         df_out = pd.DataFrame.from_dict(output_money)
         df_out = df_out.reset_index(drop=True)
+        df_out = df_out.T
+        df_out.columns = ['Amount']
         
         venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out)
         
         return output_money, my_dic, tip_perc, tax_perc, fee_part
+
+# retained for posterity
+html_table_style = '''
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>'''
+
+# used in venmo_request
+html_table_header = '''
+<table class="tg">
+'''
+# used in venmo_request
+html_table_end = '''</tr>
+</tbody>
+</table>'''
 
 def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out):
     '''
@@ -173,43 +197,48 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
     ASCII table source: http://www.asciitable.com/
     Use Hx column, add a % before it
     '''
-    st.write('## Output')
+    link_output = {}
     
-    col_out1,col_out2 = st.beta_columns(2)
-    with col_out1:
-        st.write('''
-    ### Venmo Requests: 
-    Get your :dollar: back! :smile:
-            ''')
-        link_output = []
-        for key in request.keys():
-            txn = 'charge' # charge or pay
-            audience = 'private' # private, friends, or public
-            amount = request[key] # total requested dollars
+    for key in request.keys():
+        txn = 'charge' # charge or pay
+        audience = 'private' # private, friends, or public
+        amount = round(request[key],2) # total requested dollars
 
-            # statement construction
-            statement = f'Hi {key}! Food was ${round(my_dic[key],2)}'
-            if tip > 0.0:
-                statement += f', tip was {round(tip_perc*100,2)}%25'
-            if tax > 0.0:
-                statement += f', tax was {round(tax_perc*100,2)}%25'
-            if misc_fees > 0.0:
-                statement += f', fees were {round(fee_part,2)}'
+        # statement construction
+        statement = f'Hi {key}! Food was ${round(my_dic[key],2)}'
+        if tip > 0.0:
+            statement += f', tip was {round(tip_perc*100,2)}%25'
+        if tax > 0.0:
+            statement += f', tax was {round(tax_perc*100,2)}%25'
+        if misc_fees > 0.0:
+            statement += f', fees were {round(fee_part,2)}'
 
-            statement += '.%0AMade with %3C3 at payme.peti.work' # %0A creates a new line
-            statement = statement.replace(' ','%20') # replace spaces for url parameter
+        statement += '.%0AMade with %3C3 at payme.peti.work' # %0A creates a new line
+        statement = statement.replace(' ','%20') # replace spaces for url parameter
+        link = f"https://venmo.com/?txn={txn}&audience={audience}&recipients={key}&amount={amount}&note={statement}"
+        #link_html = f"<a href='{link}' target='_blank'>Click me for {key}'s sake!</a>"
+        #link_md = f"[Click me for {key}'s sake!](link)"
+        link_output[key] = link
 
-            link = f"[Click me for {key}'s sake!](https://venmo.com/?txn={txn}&audience={audience}&amount={amount}&note={statement})"
-            #link_output.append(link)
-            st.write(f"* {link}")
-    with col_out2:
-        st.write('### Preview:')
-        st.write('Who paid how much?')
-        df_out = df_out.T
-        df_out.columns = ['Amount']
-        df_out
+    html_table_data = f'''
+<tbody>'''
+    venmo_logo = 'https://cdn1.venmo.com/marketing/images/branding/downloads/venmo_logo_blue.svg'
+    
+    for key in request.keys():
+        # append each person's rows to html table 
+        html_row = f'''
+<tr>
+    <td class="tg-0pky">{key}<br></td>
+    <td class="tg-0pky">${round(request[key],2)}</td>
+    <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60"></a><br></td>
+</tr>'''
+        html_table_data += html_row
 
-st.write('## User input')
+    html_table = html_table_header + html_table_data + html_table_end
+    
+    st.write(html_table, unsafe_allow_html=True)
+    st.write('')
+
 ## Demo
 with st.beta_expander(label='How To'):
     st.write(f"""
@@ -282,7 +311,9 @@ for (people, amount) in raw_pairs:
             data[person] += round(amount/len(people),2)
 
 precheck_sum = sum(data.values())
-total_input = st.number_input("Calculated Total",step=1.0,value=round(precheck_sum+tax_input+tip_input+fees_input,2))
+total_value = round(precheck_sum+tax_input+tip_input+fees_input,2) # prefill the total
+
+total_input = st.number_input("Calculated Total",step=1.0,value=total_value)
 
 try:
     # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
@@ -292,23 +323,24 @@ try:
 
 except Exception as e:
     ''
-
 #############################
     
 # Fun stuff
-col_save, col_show = st.beta_columns(2)
-with col_save:
-    button_save = st.button(label='Submit to Database')
-with col_show:
-    button_show = st.button(label='Show the Database')
 
-if button_save == True:
-    saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
-    saveus.save_table()
-    st.balloons()
-    
-if button_show == True:
-    showus = saveInfo()
-    dataframe = showus.read_table()
-    show_me = dataframe.tail()
-    show_me
+with st.beta_expander(label='Not required, but very fun'):
+    col_save,col_middle, col_show = st.beta_columns([6,8,6])
+
+    with col_show:
+        button_show = st.button(label='Preview the Database')
+    with col_save:
+        button_save = st.button(label='Submit to Database')
+    if button_save == True:
+        saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
+        saveus.save_table()
+        st.balloons()
+
+    if button_show == True:
+        showus = saveInfo()
+        dataframe = showus.read_table()
+        show_me = dataframe.tail()
+        show_me
