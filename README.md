@@ -1,4 +1,4 @@
-# money_requesting
+# PayMe
 Just a simple repo to calculate how much to request from people after a night out
 
 # How-To
@@ -36,23 +36,6 @@ crontab -e
 
 # Screenshots
 
-## Homepage
-![](images/initial_page.png?raw=true)
+## Expanded Page
+![](images/whole_page.png?raw=true)
 
-### How To
-![](images/how_to.png?raw=true)
-
-## Sample Input
-![](images/sample_input.png?raw=true)
-
-### What Happened?
-![](images/what_happened.png?raw=true)
-
-## Sample Output
-![](images/sample_output.png?raw=true)
-
-### Database Preview
-![](images/database.png?raw=true)
-
-### Venmo Preview
-![](images/venmo.png?raw=true)
