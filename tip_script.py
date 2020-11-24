@@ -17,38 +17,83 @@ footer {visibility: hidden;}
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-def db_save_table(dataframe, name, db = 'money_split.db', folder='sqlite:///C:\\Users\\albei\\OneDrive\\Desktop\\streamlit_test\\', if_exists='fail', index=False):
-    '''
-    Saves dataframe to bike_data.db by default
-    
-    input
-    -----
-    dataframe: df
-        Dataframe to save to sql
-    name: str
-        Name to save dataframe as
-    db: str
-        Name of database
-    folder: str
-        Location of database. Must end in backslash
-    if_exists: string
-        'fail' or 'replace', what to do if table name exists in db
-    index: bool
-        False if index should be dropped
-        True if index should be saved as new column
-    '''
-    import sqlalchemy as sq
-    from datetime import datetime
-    from pytz import timezone
-    tz = timezone('US/Eastern')
-    now = datetime.now(tz) 
+class saveInfo():
+    def __init__(self, my_total, my_food, tip_perc, tax_perc, fee_part):
+        '''
+        Initialize the sqlite database
+        
+        input
+        -----
+        my_total: dict
+            Dictionary of name:float, representing the total requested from each individual
+        my_food: dict
+            Dictionary of name:float, representing the total spent on food by each individual
+        tip_perc: float
+            Percent (in decimal form) the whole group tipped
+        tax_perc: float
+            Percent (in decimal form) the whole group spent on tax
+        fee_part: float
+            Misc fees evenly divided amongst all individuals
+        '''
+        import sqlalchemy as sq
+        import datetime as dt
+        from pytz import timezone 
 
-    dt_string = now.strftime("%m-%d-%Y %H:%M:%S")
+        # initialize engine
+        engine = sq.create_engine('sqlite:///payme.db')
+        meta = sq.MetaData()
+        
+        # table format in db
+        self.payme_now = sq.Table(
+           'payme_now', meta, 
+           sq.Column('id', sq.Integer, primary_key = True), 
+           sq.Column('date',sq.DateTime),
+           sq.Column('name', sq.String), 
+           sq.Column('food', sq.Float),
+           sq.Column('tip',sq.Float),
+           sq.Column('tax',sq.Float),
+           sq.Column('fees',sq.Float),
+           sq.Column('total',sq.Float)
+        )
+        
+        # format data into proper list of dictionaries
+        tz = timezone('US/Eastern')
+        result = []
+        
+        for key in my_total.keys():
+            person = {
+                'date':dt.datetime.now(tz),
+                'name':key,
+                'food':my_food[key],
+                'tip':round(my_food[key] * tip_perc,2),
+                'tax':round(my_food[key] * tax_perc,2),
+                'fees':fee_part,
+                'total':my_total[key][0] # its a dictionary of lists, with each list having only the total
+            }
+            
+            result.append(person)
+        
+        meta.create_all(engine) # not sure why its needed, but its in the tutorial so ... :shrug:
+        self.engine = engine
+        self.result = result
+        
+    def save_table(self):
+        '''
+        Saves information to database
+        '''
+        import datetime as dt
+        
+        conn = self.engine.connect()
+        result = conn.execute(self.payme_now.insert(), self.result)
+        
+    def read_table(self):
+        '''
+        Returns the entire database
+        '''
+        import pandas as pd
+        
+        return pd.read_sql_table('payme_now',self.engine,parse_dates='date')
 
-    location = folder + db
-    cnx = sq.create_engine(location)
-    dataframe.to_sql(name, con=cnx, if_exists=if_exists, index=index)
-    return f'Dataframe saved to {location} as {name} on {dt_string}'
 
 def venmo_requester(my_dic, total, tax=0, tip=0, misc_fees=0):
     """
@@ -132,6 +177,8 @@ Copy and paste these into the venmo app
         for key in request.keys():
             output_comment[key] = f'Food was ${round(my_dic[key],2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
         output_comment
+        
+        return output_money, my_dic, tip_perc, tax_perc, fee_part
 
 st.write('## User input')
 ## Demo
@@ -206,13 +253,30 @@ for (people, amount) in raw_pairs:
             data[person] += round(amount/len(people),2)
 
 precheck_sum = sum(data.values())
-total_input = st.number_input("Calculated Total",step=1.0,value=precheck_sum+tax_input+tip_input+fees_input)
+total_input = st.number_input("Calculated Total",step=1.0,value=round(precheck_sum+tax_input+tip_input+fees_input,2))
 
 try:
-    venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-except:
-    ''
+    # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
+    data
+    total_input
+    my_total, my_food, tip_perc, tax_perc, fee_part = venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+except Exception as e:
+    e # print exception in the browser
+    
+##### LIVE TESTING AREA #####
+
+#############################
+    
 # Fun stuff
-button = st.button(label='Submit to Database')
-if button == True:
+button_save = st.button(label='Submit to Database')
+button_show = st.button(label='Show the Database')
+
+if button_save == True:
+    saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part)
+    saveus.save_table()
     st.balloons()
+    
+if button_show == True:
+    showus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part)
+    dataframe = showus.read_table()
+    dataframe
