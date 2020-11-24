@@ -36,8 +36,6 @@ crontab -e
 
 # Screenshot
 
-NOTE: The `Submit to Database` button is there for funsies only. Saving to database is not yet implemented.
-
 ## Homepage
 ![](images/initial_page.png?raw=true)
 
