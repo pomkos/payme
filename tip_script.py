@@ -175,7 +175,17 @@ Copy and paste these into the venmo app
             ''')
         output_comment = {}
         for key in request.keys():
-            output_comment[key] = f'Food was ${round(my_dic[key],2)}, tip was {round(tip_perc*100,2)}%, tax was {round(tax_perc*100,2)}%, fees were ${round(fee_part,2)}'
+            statement = f'Food was ${str(round(my_dic[key],2))}'
+            
+            if tip > 0.0:
+                statement += f', tip was {str(round(tip_perc*100,2))}%'
+            if tax > 0.0:
+                statement += f', tax was {str(round(tax_perc*100,2))}%'
+            if misc_fees > 0.0:
+                statement += f', fees were ${str(round(fee_part,2))}'
+                
+            statement += '. Made with <3 by payme.peti.work (:'
+            output_comment[key] = statement
         output_comment
         
         return output_money, my_dic, tip_perc, tax_perc, fee_part
@@ -259,7 +269,7 @@ try:
     # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
     my_total, my_food, tip_perc, tax_perc, fee_part = venmo_requester(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
 except Exception as e:
-    ''
+    e
 ##### LIVE TESTING AREA #####
 
 #############################
