@@ -36,6 +36,12 @@ crontab -e
 
 # Screenshots
 
+## Default View without Inputs
+![](images/no_input.png?raw=true)
+
+## Default View with Inputs
+![](images/yes_input.png?raw=true)
+
 ## Expanded Page
 ![](images/whole_page.png?raw=true)
 
