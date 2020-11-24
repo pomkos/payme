@@ -200,7 +200,7 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
             statement += '.%0AMade with < 3 by payme.peti.work' # %0A creates a new line
             statement = statement.replace(' ','%20') # replace spaces for url parameter
 
-            link = f"[Click me for {key}'s sake!](https://venmo.com/?txn={txn}&audience={audience}&amount={amount}&note={statement})"
+            link = f"[Click me for {key}'s sake!](venmo://paycharge?txn={txn}&audience={audience}&amount={amount}&note={statement})"
             #link_output.append(link)
             st.write(f"* {link}")
 
