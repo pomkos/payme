@@ -344,4 +344,4 @@ with st.beta_expander(label='Not required, but very fun', expanded=True):
         dataframe = showus.read_table()
         dataframe = dataframe.iloc[:,1:]
         show_me = dataframe.tail()
-        show_me
+        st.table(show_me,2)
