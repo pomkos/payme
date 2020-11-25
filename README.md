@@ -41,7 +41,7 @@ crontab -e
 # Screenshots
 
 ## Autofilled Venmo Request
-![](images/venmo.png?raw=true)
+![](images/venmo.png?raw=true | width=100)
 
 ## Default View with Inputs
 ![](images/yes_input.png?raw=true)
