@@ -41,14 +41,15 @@ crontab -e
 # Screenshots
 
 ## Autofilled Venmo Request
-![](images/venmo.png?raw=true)
+
+<img src="https://github.com/pomkos/payme/blob/main/images/venmo.png" width="500">
 
 ## Default View with Inputs
-![](images/yes_input.png?raw=true)
+<img src="https://github.com/pomkos/payme/blob/main/images/yes_input.png" width="500">
 
 ## Default View without Inputs
-![](images/no_input.png?raw=true)
+<img src="https://github.com/pomkos/payme/blob/main/images/no_input.png" width="500">
 
 ## Expanded Page
-![](images/whole_page.png?raw=true)
+<img src="https://github.com/pomkos/payme/blob/main/images/whole_page.png" width="500">
 
