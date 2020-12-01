@@ -1,8 +1,20 @@
+# Table of Contents
+
+1. [Description](#payme)
+2. [How-To](#how-to)
+    1. [Test it](#test-it)
+    2. [Host it](#host-it)
+3. [Screenshots](#screenshots)
+    1. [Autofilled Venmo Request](#autofilled-venmo-request)
+    2. [Default View with Inputs](#default-view-with-inputs)
+    3. [Default View without Inputs](#default-view-without-inputs)
+    4. [Expanded Page](#expanded-page)
+
 # PayMe
 Just a simple repo to calculate how much to request from people after a night out
 
 # How-To
-
+## Test it
 To run in "dev" mode:
 
 1. Clone this repo `git clone https://github.com/pomkos/payme`
@@ -17,6 +29,8 @@ To run in "dev" mode:
   ```bash
   streamlit run tip_script.py --server.port 8512 
   ```
+  
+## Host it
 To run in dev mode, just in the background:
 
 * Create the following script
