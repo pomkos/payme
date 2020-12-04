@@ -193,24 +193,25 @@ def start(button=None):
         ''
     #############################
     # Database section
-    with st.beta_expander(label='Not required, but very fun', expanded=True):
-        col_save,col_middle, col_show = st.beta_columns([6,8,6])
+    
+    st.write("Not required, but very fun")
+    col_save,col_show = st.beta_columns([0.33,1])
 
-        with col_show:
-            button_show = st.button(label='Preview the Database')
-        with col_save:
-            button_save = st.button(label='Submit to Database')
-        if button_save == True:
-            saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
-            saveus.save_table()
-            st.balloons()
+    with col_show:
+        button_show = st.button(label='Preview the Database')
+    with col_save:
+        button_save = st.button(label='Submit to Database')
+    if button_save == True:
+        saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
+        saveus.save_table()
+        st.balloons()
 
-        if button_show == True:
-            showus = saveInfo()
-            dataframe = showus.read_table()
-            dataframe = dataframe.iloc[:,1:]
-            show_me = dataframe.tail()
-            st.table(show_me)
+    if button_show == True:
+        showus = saveInfo()
+        dataframe = showus.read_table()
+        dataframe = dataframe.iloc[:,1:]
+        show_me = dataframe.tail()
+        st.table(show_me)
             
 def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
     """
