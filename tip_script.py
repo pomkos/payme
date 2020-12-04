@@ -14,7 +14,7 @@ footer {visibility: hidden;}
   window.addEventListener('load', addDarkmodeWidget);
 </script>
 
-"""
+""" #hi
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 class receiptFormat():
