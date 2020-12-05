@@ -58,7 +58,7 @@ streamlit run payme.py
 
 ## Host
 
-1. Create a new file outside the `brotein` directory:
+1. Create a new file outside the `payme` directory:
 
 ```
 cd
@@ -72,7 +72,7 @@ nano payme.sh
 
 source ~/anaconda3/etc/profile.d/conda.sh
 
-cd ~/brotein
+cd ~/payme
 conda activate pay_env
 
 nohup streamlit run payme.py --server.port 8503 &
