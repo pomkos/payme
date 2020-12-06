@@ -1,5 +1,11 @@
 import streamlit as st
 import re
+import sys
+
+us_pw = sys.argv[1]  # user input: "my_user:password"
+db_ip = sys.argv[2]  # user input: 192.168.1.11
+port = sys.argv[3]   # user input: 5432
+
 
 hide_streamlit_style = """
 <style>
@@ -68,9 +74,8 @@ class saveInfo():
         from pytz import timezone 
 
         # initialize engine
-        #parent = os.path.dirname(os.getcwd()) # get parent of current directory
-        engine = sq.create_engine(f'sqlite:///payme.db')
-        
+        engine = sq.create_engine(f'postgres://{us_pw}@{db_ip}:{port}')
+       
         meta = sq.MetaData()
         if showme=='no':
         # table format in db
