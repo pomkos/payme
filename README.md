@@ -9,7 +9,6 @@
 3. [How-Tos](#how-tos)
     1. [Run](#run)
     2. [Host](#host)
-    3. [Catch-all Script](#catch-all-script)
 
 # PayMe
 Just a simple repo to calculate how much to request from people after a night out
@@ -91,64 +90,3 @@ crontab -e
 ```
 
 5. Access the website at `localhost:8503`
-
-## Catch-All Script
-
-The following is just a simple script to help run various streamlit programs in the background. 
-
-### To run: 
-
-`./script_name.sh -f folder_name -e env_name -p port_num`
-
-### Script:
-```
-################################################################################
-# Help                                                                         #
-################################################################################
-Help()
-{
-   # Display Help
-   echo
-   echo "Starts a streamlit python script."
-   echo
-   echo "Syntax: scriptTemplate [-h|f|e|p]"
-   echo "options:"
-   echo "f     Folder python script is in."
-   echo "e     Conda environment to use."
-   echo "p     Port to publish on."
-   echo "h     Print this Help."
-   echo
-}
-
-################################################################################
-# Main program                                                                 #
-################################################################################
-run_script()
-{
-    source ~/anaconda3/etc/profile.d/conda.sh
-
-    cd ~/projects/$folder
-    conda activate $my_env # activate the new conda env
-    nohup streamlit run $folder.py --server.port $port & # run in background
-
-    echo "Running $folder.py on port $port using PID $!"
-}
-
-
-# get options
-while getopts ":h:f:e:p:" option; do
-    case $option in
-        h)  #display help
-            Help
-            exit;;
-        \?) #incorrect option
-            echo "Error: Invalid option"
-            exit;;
-        f) folder=${OPTARG};;
-        e) my_env=${OPTARG};;
-        p) port=${OPTARG};;
-    esac
-done
-
-run_script
-```
