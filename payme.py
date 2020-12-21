@@ -204,6 +204,7 @@ def auto_input(input_type):
     input_type: str
         Either pdf or image. Defines what type of file is uploaded.
     '''
+    from PIL import Image
     if input_type == 'image':
         my_receipt = st.file_uploader("Upload a screenshot",type=['png','jpg','jpeg'])
         if not my_receipt:
@@ -217,8 +218,11 @@ def auto_input(input_type):
             st.stop()
         ocr_pdf(my_receipt)
         text_str = ocr_image(my_receipt='pdf')
-
-
+    with st.beta_expander(label="OCR feedback"):
+        col_img, col_extract = st.beta_columns(2)
+        with col_img:
+            st.success("Uploaded!")
+            st.image(Image.open(my_receipt),width=250)
     extracted = {} # dictionary of all extracted info
     ###
     # Extract all prices
@@ -235,14 +239,20 @@ def auto_input(input_type):
     extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
     extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
     
-    st.info(f"""I detected {extracted['participants']} people on this receipt. Add their names in order of appearance.""")
-    names = []
-    my_names = st.text_area("Separate names with a comma: ,")
+    my_names = st.text_area("Separate names with a comma: peter, Russell")
+    if not my_names:
+        st.info(f"""Add all __{extracted['participants']} names__ in the order that they appear on the receipt.""")
+        st.stop()
     my_names = my_names.split(',')
+    if len(my_names)!=extracted['participants']:
+        # if user didn't provide the right number of names, script won't work
+        st.warning(f"I detected __{extracted['participants']}__ people on this receipt, but you provided __{len(my_names)}__")
+        st.stop()
+    
+    # format input to remove space and make it all lowercase
     names = [n.lower().strip() for n in my_names]
     names.append('subtotal')
     names = tuple(names)
-
     names_dict = {} # dictionary of names and their iloc in the series
     for i, s in text_str.iteritems():
         for name in names:
@@ -264,20 +274,22 @@ def auto_input(input_type):
     all_money = extracted['monies'] # each item is on its own line
     people_money = all_money.loc[:extracted['items']-1] # the first X rows are all items, subtract one cuz ending is inclusive
     my_receipt = {}
-    for name in names[:len(names)-1]: # the last one is always subtotal
-        my_receipt[name] = people_money.loc[:extracted[name]-1]
-        for i in range(extracted[name]):
-            try:
-                people_money = people_money.drop(i).reset_index(drop=True)
-            except:
-                pass
-            
+    try:
+        for name in names[:len(names)-1]: # the last one is always subtotal
+            my_receipt[name] = people_money.loc[:extracted[name]-1]
+            for i in range(extracted[name]):
+                try:
+                    people_money = people_money.drop(i)
+                except:
+                    pass
+            people_money = people_money.reset_index(drop=True)
+    except:
+        st.warning("Are you sure the names were provided in the right order?")
     receipt_input = ''
     for name in my_receipt.keys():
         receipt_input += f'{name}: {list(my_receipt[name])} '
     receipt_input = receipt_input.replace('[','')
     receipt_input = receipt_input.replace(']','')
-    
     ###
     # Extract totals, fees, tips, taxes
     ###
@@ -288,6 +300,9 @@ def auto_input(input_type):
         fees_input = not_people[2]
         tip_input = not_people[3]
         total = not_people[4]
+        with col_extract:
+            st.success("Data extracted!")
+            extracted_col(extracted,all_money,not_people,receipt_input,names)            
     elif len(not_people) == 6: # delivery fee assumed to be included
         subtotal = not_people[0]
         tax_input = not_people[1]
@@ -295,12 +310,94 @@ def auto_input(input_type):
         fees_input += not_people[3]
         tip_input = not_people[4]
         total = not_people[5]
+        with col_extract:
+            st.success("Data extracted!")
+            extracted_col(extracted,all_money,not_people,receipt_input,names)  
+    elif len(not_people) == 3: # this was a pickup order, so no fees or tip
+        subtotal = not_people[0]
+        tax_input = not_people[1]
+        fees_input = 0
+        tip_input = 0
+        total = not_people[2]
+        with col_extract:
+            st.success("Data extracted!")
+            extracted_col(extracted,all_money,not_people,receipt_input,names) 
     else:
-        st.warning(f"Expected 5 or 6 nonFood items, but received {len(not_people)}. Try manual input instead!")
-
+        import pandas as pd
+        st.warning(f"Expected 5 or 6 nonFood items, but found {len(not_people)}. Try manual input instead!")
+        with col_extract:
+            st.warning("Something went wrong. Did I OCR right?")
+            extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'bad')           
+          
     return receipt_input ,fees_input, tax_input, tip_input
 
-
+def extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'good'):
+    import pandas as pd
+    # present info
+    combed_df = pd.DataFrame({
+        "category":['num people', 'items'],
+        "data":[extracted['participants'], extracted['items']]
+    })
+    # Append names
+    for name in names:
+        try:
+            plural = ['s' if extracted[name]>1 else '']
+            name_df = pd.DataFrame({
+                "category":name,
+                "data":[f'bought {extracted[name]} item{plural[0]}']})
+            combed_df = combed_df.append(name_df)
+        except:
+            continue
+    # Append prices
+    all_money = all_money.reset_index()
+    all_money.columns = ['index','data']
+    all_money['category'] = 'price ' + all_money['index'].astype(str)
+    all_money = all_money.drop("index",axis=1)
+    combed_df = combed_df.append(all_money)
+    
+    st.write("__Detected info:__")
+    
+    if status == 'bad':
+        st.write("__Detected fees and totals:__")
+        not_people
+    else:
+        for i, row in combed_df.iterrows():
+            if row['data'] == not_people[-1]: # find total
+                row['category'] = 'total' # rename total
+        if len(not_people) == 6: # all fees
+            for i,row in combed_df.iterrows():
+                if row['data'] == not_people[-2]:
+                    row['category'] = 'tip'
+                if row['data'] == not_people[-3]:
+                    row['category'] = 'service fee'
+                if row['data'] == not_people[-4]:
+                    row['category'] = 'delivery fee'
+                if row['data'] == not_people[-5]:
+                    row['category'] = 'tax'
+                if row['data'] == not_people[-6]:
+                    row['category'] = 'subtotal'
+            combed_df
+        if len(not_people) == 5: # no delivery fee 
+            for i,row in combed_df.iterrows():
+                if row['data'] == not_people[-2]:
+                    row['category'] = 'tip'
+                if row['data'] == not_people[-3]:
+                    row['category'] = 'service fee'
+                if row['data'] == not_people[-4]:
+                    row['category'] = 'tax'
+                if row['data'] == not_people[-5]:
+                    row['category'] = 'subtotal'
+            combed_df
+        if len(not_people) == 3: # no delivery fee, service fee, or tip
+            for i, row in combed_df.iterrows():
+                if row['data'] == not_people[-2]: # find tax
+                    row['category'] = 'tax' # rename tax
+                if row['data'] == not_people[-3]: # find subtotal
+                    row['category'] = 'subtotal' # rename subtotal
+            combed_df
+    st.write("__Detected cost distribution:__")
+    st.write(receipt_input.title())
+    
 def start(button=None):
     '''
     Main app. Creates the GUI and gathers basic info.
