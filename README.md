@@ -74,7 +74,7 @@ source ~/anaconda3/etc/profile.d/conda.sh
 cd ~/payme
 conda activate pay_env
 
-nohup streamlit run payme.py --server.port 8503 &
+nohup streamlit run payme.py "postgres_user:postgres_pw" "postgres_ip" "postgres_port" --server.port 8503 &
 ```
 
 3. Edit crontab so portfolio is started when server reboots
@@ -86,7 +86,7 @@ crontab -e
 4. Add the following to the end, then save and exit
 
 ```
-@reboot /home/payme.sh
+@reboot /home/payme.sh "postgres_user:postgres_pw" "postgres_ip" "postgres_port" --server.port 8503
 ```
 
 5. Access the website at `localhost:8503`
