@@ -195,29 +195,26 @@ def ocr_pdf(my_receipt):
     pages = convert_from_bytes(my_receipt.read())
     pages[0].save(f"temp/page.jpg",'JPEG')
     
-def auto_input(input_type):
+def auto_input():
     '''
-    Main auto function, decide pdf vs image then organize extracted info
-    
-    input
-    -----
-    input_type: str
-        Either pdf or image. Defines what type of file is uploaded.
+    Main auto function, decides pdf vs image then organize extracted info
     '''
     from PIL import Image
-    if input_type == 'image':
-        my_receipt = st.file_uploader("Upload a screenshot",type=['png','jpg','jpeg'])
-        if not my_receipt:
-            st.info("Upload a screenshot of the receipt!")
-            st.stop()
-        text_str = ocr_image(my_receipt=my_receipt)
-    else:
-        my_receipt = st.file_uploader("Upload a receipt",type=['pdf'])
-        if not my_receipt:
-            st.info("Upload receipt in PDF format!")
-            st.stop()
+    import magic
+    
+    my_receipt = st.file_uploader("Upload a screenshot or receipt",type=['png','jpg','jpeg','pdf'])
+    if not my_receipt:
+        st.info("Upload the receipt!")
+        st.stop()
+    file_type = magic.from_buffer(my_receipt.read(2048))
+
+    if "pdf" in file_type.lower():
         ocr_pdf(my_receipt)
         text_str = ocr_image(my_receipt='pdf')
+        st.warning("BETA. Prices not labeled correctly. Upload a screenshot instead!")
+    else:
+        text_str = ocr_image(my_receipt=my_receipt)
+
     with st.beta_expander(label="OCR feedback"):
         col_img, col_extract = st.beta_columns(2)
         with col_img:
@@ -234,7 +231,7 @@ def auto_input(input_type):
     try:
         monies = monies.str.replace('$','').astype(float)
     except:
-        st.info("Currently only supporting DoorDash group orders. Try manual input!")
+        st.info("Currently only supporting group DoorDash orders. Try manual input!")
         st.stop()
     extracted['monies'] = monies.reset_index(drop=True)
     
@@ -383,7 +380,7 @@ def extracted_col(extracted,all_money,not_people,receipt_input,names, status = '
                     row['category'] = 'tax'
                 if row['data'] == not_people[-6]:
                     row['category'] = 'subtotal'
-            combed_df
+            st.table(combed_df.set_index('category'))
         if len(not_people) == 5: # no delivery fee 
             for i,row in combed_df.iterrows():
                 if row['data'] == not_people[-2]:
@@ -394,14 +391,14 @@ def extracted_col(extracted,all_money,not_people,receipt_input,names, status = '
                     row['category'] = 'tax'
                 if row['data'] == not_people[-5]:
                     row['category'] = 'subtotal'
-            combed_df
+            st.table(combed_df.set_index('category'))
         if len(not_people) == 3: # no delivery fee, service fee, or tip
             for i, row in combed_df.iterrows():
                 if row['data'] == not_people[-2]: # find tax
                     row['category'] = 'tax' # rename tax
                 if row['data'] == not_people[-3]: # find subtotal
                     row['category'] = 'subtotal' # rename subtotal
-            combed_df
+            st.table(combed_df.set_index('category'))
     st.write("__Detected cost distribution:__")
     st.write(receipt_input.title())
     
@@ -413,14 +410,12 @@ def start(button=None):
         pass
     
     st.title('Venmo Requests Calculator')
-    direction = st.radio("Select input type", options=['Image','PDF (WIP)','Manual'])
+    st.write('Upload a screenshot or pdf of the doordash receipt, or manually fill out the form to get personalized venmo request links.')
+    direction = st.radio("Select input type", options=['Auto','Manual'])
     if direction == 'Manual':
         receipt_input ,fees_input, tax_input, tip_input = manual_input()
-
-    elif direction == 'PDF (WIP)':
-        receipt_input ,fees_input, tax_input, tip_input = auto_input('pdf')
     else:
-        receipt_input ,fees_input, tax_input, tip_input = auto_input('image')
+        receipt_input ,fees_input, tax_input, tip_input = auto_input()
 
     ###
     # manual_input() was cut from here
