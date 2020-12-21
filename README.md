@@ -2,7 +2,7 @@
 
 1. [Description](#payme)
 2. [Screenshots](#screenshots)
-    1. [OCR Mode](#ocr-mode
+    1. [OCR Mode](#ocr-mode)
     1. [Autofilled Venmo Request](#autofilled-venmo-request)
     2. [Default View with Inputs](#default-view-with-inputs)
     3. [Default View without Inputs](#default-view-without-inputs)
