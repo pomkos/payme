@@ -231,7 +231,11 @@ def auto_input(input_type):
     # Extract all prices
     ###
     monies = text_str[text_str.str.contains("\$")]
-    monies = monies.str.replace('$','').astype(float)
+    try:
+        monies = monies.str.replace('$','').astype(float)
+    except:
+        st.info("Currently only supporting DoorDash group orders. Try manual input!")
+        st.stop()
     extracted['monies'] = monies.reset_index(drop=True)
     
     ### 
@@ -409,11 +413,11 @@ def start(button=None):
         pass
     
     st.title('Venmo Requests Calculator')
-    direction = st.radio("Select input type", options=['Image','PDF','Manual'])
+    direction = st.radio("Select input type", options=['Image','PDF (WIP)','Manual'])
     if direction == 'Manual':
         receipt_input ,fees_input, tax_input, tip_input = manual_input()
 
-    elif direction == 'PDF':
+    elif direction == 'PDF (WIP)':
         receipt_input ,fees_input, tax_input, tip_input = auto_input('pdf')
     else:
         receipt_input ,fees_input, tax_input, tip_input = auto_input('image')
