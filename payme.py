@@ -6,7 +6,6 @@ us_pw = sys.argv[1]  # user input: "my_user:password"
 db_ip = sys.argv[2]  # user input: 192.168.1.11
 port = sys.argv[3]   # user input: 5432
 
-
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
@@ -20,7 +19,7 @@ footer {visibility: hidden;}
   window.addEventListener('load', addDarkmodeWidget);
 </script>
 
-""" #hi
+"""
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 class receiptFormat():
@@ -127,16 +126,12 @@ class saveInfo():
         import pandas as pd
 
         return pd.read_sql_table('payme_now',self.engine,parse_dates='date')
-
-def start(button=None):
+    
+def manual_input():
     '''
-    Main app. Creates the GUI and gathers basic info.
+    Cut from app() function to make way for screenshot. 
+    Manual input of costs, fees, tax, tips.
     '''
-    if type(button) == str:
-        pass
-
-    st.title('Venmo Requests Calculator')
-   
     with st.beta_expander(label='How To'):
         st.write(f"""
             1. Input the name and itemized money spent in a format of:
@@ -157,7 +152,6 @@ def start(button=None):
             2. Input the rest of the fees or tips as needed""")
 
     receipt_input = st.text_area(label="Add name and food prices*")
-
     col1, col2, col3 = st.beta_columns(3)
 
     with col1:
@@ -166,6 +160,167 @@ def start(button=None):
         tax_input = st.number_input("Tax in dollars",step=1.0)
     with col3:
         tip_input = st.number_input("Tip in dollars",step=5.0)
+    return receipt_input ,fees_input, tax_input, tip_input
+
+@st.cache
+def ocr_image(my_receipt='pdf'):
+    '''
+    Use OCR to extract information from an image. When DoorDash groups is used.
+    '''
+    import pytesseract as tes
+    from PIL import Image
+    import pandas as pd
+    # process the image
+    if my_receipt == 'pdf':
+        text_str = str(((tes.image_to_string(Image.open(f'temp/page.jpg')))))
+    else:
+        text_str = tes.image_to_string(Image.open(my_receipt))
+    text_str = text_str.lower().split("\n")
+    text_str = pd.Series(text_str)
+
+    # get rid of empty rows
+    text_str = text_str.replace('',float('NaN'))
+    text_str = text_str.dropna().reset_index(drop=True)
+    
+    return text_str
+
+@st.cache
+def ocr_pdf(my_receipt):
+    '''
+    Use OCR to extract information from an image. When DoorDash groups is used.
+    '''
+    from pdf2image import convert_from_bytes
+    
+    # process the image
+    pages = convert_from_bytes(my_receipt.read())
+    pages[0].save(f"temp/page.jpg",'JPEG')
+    
+def auto_input(input_type):
+    '''
+    Main auto function, decide pdf vs image then organize extracted info
+    
+    input
+    -----
+    input_type: str
+        Either pdf or image. Defines what type of file is uploaded.
+    '''
+    if input_type == 'image':
+        my_receipt = st.file_uploader("Upload a screenshot",type=['png','jpg','jpeg'])
+        if not my_receipt:
+            st.info("Upload a screenshot of the receipt!")
+            st.stop()
+        text_str = ocr_image(my_receipt=my_receipt)
+    else:
+        my_receipt = st.file_uploader("Upload a receipt",type=['pdf'])
+        if not my_receipt:
+            st.info("Upload receipt in PDF format!")
+            st.stop()
+        ocr_pdf(my_receipt)
+        text_str = ocr_image(my_receipt='pdf')
+
+
+    extracted = {} # dictionary of all extracted info
+    ###
+    # Extract all prices
+    ###
+    monies = text_str[text_str.str.contains("\$")]
+    monies = monies.str.replace('$','').astype(float)
+    extracted['monies'] = monies.reset_index(drop=True)
+    
+    ### 
+    # Extract people
+    ###    
+    # number of people
+    parts = text_str[text_str.str.contains('participants')]
+    extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
+    extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
+    
+    st.info(f"""I detected {extracted['participants']} people on this receipt. Add their names in order of appearance.""")
+    names = []
+    my_names = st.text_area("Separate names with a comma: ,")
+    my_names = my_names.split(',')
+    names = [n.lower().strip() for n in my_names]
+    names.append('subtotal')
+    names = tuple(names)
+
+    names_dict = {} # dictionary of names and their iloc in the series
+    for i, s in text_str.iteritems():
+        for name in names:
+            if s.startswith(name):
+                names_dict[name] = i
+    # number of items per person
+    for i in range(len(names)):
+        # find how many food items each person ate
+        try:
+            start = names_dict[names[i]]
+            end = names_dict[names[i+1]]
+            extracted[names[i]] = len(text_str[start+1:end])
+        except:
+            pass
+
+    ###
+    # Extract costs per person
+    ###
+    all_money = extracted['monies'] # each item is on its own line
+    people_money = all_money.loc[:extracted['items']-1] # the first X rows are all items, subtract one cuz ending is inclusive
+    my_receipt = {}
+    for name in names[:len(names)-1]: # the last one is always subtotal
+        my_receipt[name] = people_money.loc[:extracted[name]-1]
+        for i in range(extracted[name]):
+            try:
+                people_money = people_money.drop(i).reset_index(drop=True)
+            except:
+                pass
+            
+    receipt_input = ''
+    for name in my_receipt.keys():
+        receipt_input += f'{name}: {list(my_receipt[name])} '
+    receipt_input = receipt_input.replace('[','')
+    receipt_input = receipt_input.replace(']','')
+    
+    ###
+    # Extract totals, fees, tips, taxes
+    ###
+    not_people = tuple(all_money.loc[extracted['items']:]) # since each item is on its own line, the number of items is a good cutoff
+    if len(not_people) == 5: # if there are only 5, then no delivery fee was included
+        subtotal = not_people[0]
+        tax_input = not_people[1]
+        fees_input = not_people[2]
+        tip_input = not_people[3]
+        total = not_people[4]
+    elif len(not_people) == 6: # delivery fee assumed to be included
+        subtotal = not_people[0]
+        tax_input = not_people[1]
+        fees_input = not_people[2]
+        fees_input += not_people[3]
+        tip_input = not_people[4]
+        total = not_people[5]
+    else:
+        st.warning(f"Expected 5 or 6 nonFood items, but received {len(not_people)}. Try manual input instead!")
+
+    return receipt_input ,fees_input, tax_input, tip_input
+
+
+def start(button=None):
+    '''
+    Main app. Creates the GUI and gathers basic info.
+    '''
+    if type(button) == str:
+        pass
+    
+    st.title('Venmo Requests Calculator')
+    direction = st.radio("Select input type", options=['Image','PDF','Manual'])
+    if direction == 'Manual':
+        receipt_input ,fees_input, tax_input, tip_input = manual_input()
+
+    elif direction == 'PDF':
+        receipt_input ,fees_input, tax_input, tip_input = auto_input('pdf')
+    else:
+        receipt_input ,fees_input, tax_input, tip_input = auto_input('image')
+
+    ###
+    # manual_input() was cut from here
+    ###
     
     rf = receiptFormat()
     # a dictionary of name(s) and sum of amount
@@ -173,7 +328,6 @@ def start(button=None):
             rf.parse_alpha(alpha),
             sum([float(i) for i in rf.parse_numbers(numbers)])
         ) for (alpha, numbers) in re.findall(rf.pattern, receipt_input)]
-    
     # combine all split costs with the people involved
     data = {}
     for (people, amount) in raw_pairs:
@@ -265,9 +419,9 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
         ### Explain the calculation for transparency ###
         with st.beta_expander(label='What just happened?'):
             st.write(f"""
-            1. Tax% ($p_x$) was calculated using tax/(food_total): {round(tax_perc*100,2)}%
-            2. Tip% ($p_p$) was calculated using tip/(food_total): {round(tip_perc*100,2)}%
-            3. Fees were distributed equally: ${fee_part}
+            1. Tax% ($p_x$) was calculated using tax/(food_total): __{round(tax_perc*100,2)}%__
+            2. Tip% ($p_p$) was calculated using tip/(food_total): __{round(tip_perc*100,2)}%__
+            3. Fees were distributed equally: __${fee_part}__ per person
             4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f$
                 * $m_t$ = total money to request
                 * $d_s$ = dollars spent on food
