@@ -410,7 +410,7 @@ def start(button=None):
         pass
     
     st.title('Venmo Requests Calculator')
-    st.write('Upload a screenshot or pdf of the doordash receipt, or manually fill out the form to get personalized venmo request links.')
+    st.write('Your one stop shop for personalized and accurate venmo requests.')
     direction = st.radio("Select input type", options=['Auto','Manual'])
     if direction == 'Manual':
         receipt_input ,fees_input, tax_input, tip_input = manual_input()
