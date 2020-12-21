@@ -15,6 +15,9 @@ Just a simple repo to calculate how much to request from people after a night ou
 
 # Screenshots
 
+## OCR Mode
+<img src="https://github.com/pomkos/payme/blob/main/images/venmo-auto.png" width="620">
+
 ## Autofilled Venmo Request
 <img src="https://github.com/pomkos/payme/blob/main/images/venmo.png" width="620">
 
