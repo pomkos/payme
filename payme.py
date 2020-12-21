@@ -222,7 +222,10 @@ def auto_input(input_type):
         col_img, col_extract = st.beta_columns(2)
         with col_img:
             st.success("Uploaded!")
-            st.image(Image.open(my_receipt),width=250)
+            try:
+                st.image(Image.open(my_receipt),width=250)
+            except:
+                st.warning("Bug with showing image")
     extracted = {} # dictionary of all extracted info
     ###
     # Extract all prices
@@ -558,7 +561,7 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
 #     .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
 #       overflow:hidden;padding:10px 5px;word-break:normal;}
 #     .tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-#       font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+#       font-weight:normal wow this is impressive;overflow:hidden;padding:10px 5px;word-break:normal;}
 #     .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
 #     </style>'''
 
