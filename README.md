@@ -2,6 +2,7 @@
 
 1. [Description](#payme)
 2. [Screenshots](#screenshots)
+    1. [OCR Mode](#ocr-mode)
     1. [Autofilled Venmo Request](#autofilled-venmo-request)
     2. [Default View with Inputs](#default-view-with-inputs)
     3. [Default View without Inputs](#default-view-without-inputs)
@@ -14,6 +15,9 @@
 Just a simple repo to calculate how much to request from people after a night out
 
 # Screenshots
+
+## OCR Mode
+<img src="https://github.com/pomkos/payme/blob/main/images/venmo-auto.png" width="620">
 
 ## Autofilled Venmo Request
 <img src="https://github.com/pomkos/payme/blob/main/images/venmo.png" width="620">
