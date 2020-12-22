@@ -172,7 +172,7 @@ def ocr_image(my_receipt='pdf'):
     import pandas as pd
     # process the image
     if my_receipt == 'pdf':
-        text_str = str(((tes.image_to_string(Image.open(f'temp/page.jpg')))))
+        text_str = tes.image_to_string('temp/page.jpg')
     else:
         text_str = tes.image_to_string(Image.open(my_receipt))
     text_str = text_str.lower().split("\n")
@@ -184,7 +184,6 @@ def ocr_image(my_receipt='pdf'):
     
     return text_str
 
-@st.cache
 def ocr_pdf(my_receipt):
     '''
     Use OCR to extract information from an image. When DoorDash groups is used.
@@ -192,8 +191,11 @@ def ocr_pdf(my_receipt):
     from pdf2image import convert_from_bytes
     
     # process the image
-    pages = convert_from_bytes(my_receipt.read())
-    pages[0].save(f"temp/page.jpg",'JPEG')
+    pages = convert_from_bytes(my_receipt.read(),dpi=500,fmt='png')
+    i=0
+    for page in pages:
+        page.save(f"temp/page{i}.jpg",'JPEG')
+        i+=1
     
 def auto_input():
     '''
@@ -201,12 +203,12 @@ def auto_input():
     '''
     from PIL import Image
     import magic
-    
+
     my_receipt = st.file_uploader("Upload a screenshot or receipt",type=['png','jpg','jpeg','pdf'])
     if not my_receipt:
         st.info("Upload the receipt!")
         st.stop()
-    file_type = magic.from_buffer(my_receipt.read(2048))
+    file_type = magic.from_buffer(my_receipt.read(2048)) # get the file type
 
     if "pdf" in file_type.lower():
         ocr_pdf(my_receipt)
@@ -220,9 +222,12 @@ def auto_input():
         with col_img:
             st.success("Uploaded!")
             try:
-                st.image(Image.open(my_receipt),width=250)
+                if "pdf" in file_type.lower():
+                    st.image('temp/page.jpg',width=250)
+                else:
+                    st.image(Image.open(my_receipt),width=250)
             except:
-                st.warning("Bug with showing image")
+                st.warning("Can't show image")
     extracted = {} # dictionary of all extracted info
     ###
     # Extract all prices
