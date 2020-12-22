@@ -1,5 +1,8 @@
+pytesseract==0.3.7
+streamlit==0.73.1
 pandas==1.1.3
-pytz==2020.1
+pdf2image==1.14.0
 SQLAlchemy==1.3.20
-streamlit==0.69.2
-psycopg2-binary # required for connecting to postgres
+pytz==2020.1
+Pillow==8.0.1
+python_magic==0.4.18

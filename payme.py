@@ -624,5 +624,6 @@ def app():
     Only purpose is to start the app. Own function so the rest of the functions can be organized in a logical way.
     '''
     start(button='start')
-    
+
+
 app()
