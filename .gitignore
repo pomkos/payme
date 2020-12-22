@@ -130,3 +130,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+temp/page0.jpg
+temp/page1.jpg
