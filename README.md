@@ -16,43 +16,7 @@ Just a simple repo to calculate how much to request from people after a night ou
 
 # Database outline
 
-## names
-
-table of all names and ids
-
-name      | column_type | ext_info                  | ref | default | comment              
---------- | ----------- | ------------------------- | --- | ------- | ---------------------
-id        | integer     | [pk, increment, not null] |     |         |                      
-name      | varchar     | [null]                    |     |         |                      
-total_avg | float       | [not null]                |     |         | Average of all totals
-
-## summary
-
-summary of transactions
-
-name   | column_type | ext_info       | ref                       | default | comment           
------- | ----------- | -------------- | ------------------------- | ------- | ------------------
-txn_id | integer     | [pk, not null] |                           |         |                   
-id     | integer     | [not null]     | [names.id](#names)        |         |                   
-date   | timestamp   | [null]         |                           |         |                   
-name   | varchar     | [null]         |                           |         |                   
-total  | float       | [not null]     | [names.total_avg](#names) |         | total of all items
-
-## details
-
-itemized list of prices
-
-name       | column_type | ext_info       | ref                        | default | comment
----------- | ----------- | -------------- | -------------------------- | ------- | -------
-txn_id     | integer     | [not null]     | [summary.txn_id](#summary) |         |        
-item_id    | integer     | [pk, not null] |                            |         |        
-date       | timestamp   | [null]         |                            |         |        
-name       | varchar     | [null]         |                            |         |        
-food_price | float       | [not null]     |                            |         |        
-tip        | float       | [null]         |                            |         |        
-fees       | float       | [null]         |                            |         |        
-
-
+<img src="https://peti.drawerd.com/projects/1462/render_svg?share_key=b3ecaddcca136ca0dee2d537f06e22" width="720">
 
 # Screenshots
 
