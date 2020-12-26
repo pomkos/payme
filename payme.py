@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import re
 import sys
 
@@ -26,52 +27,36 @@ def start(button=None):
     '''
     Main app. Creates the GUI and gathers basic info.
     '''
-    if type(button) == str:
-        pass
-    
-    st.title('Venmo Requests Calculator')
-    st.write('Your one stop shop for personalized and accurate venmo requests.')
-    select_input = st.radio("Select input type", options=['Auto','Manual'])
-    if select_input == 'Manual':
-        receipt_input ,fees_input, tax_input, tip_input = manual_input()
+    if st.experimental_get_query_params():
+        total_input, data, tax_input, fees_input, tip_input = use_params()
     else:
-        import image_rec as ir
-        receipt_input ,fees_input, tax_input, tip_input = ir.auto_input()
-    
-    rf = receiptFormat()
-    # a dictionary of name(s) and sum of amount
-    raw_pairs = [(
-            rf.parse_alpha(alpha),
-            sum([float(i) for i in rf.parse_numbers(numbers)])
-        ) for (alpha, numbers) in re.findall(rf.pattern, receipt_input)]
-    # combine all split costs with the people involved
-    data = {}
-    for (people, amount) in raw_pairs:
-        for person in [person.capitalize() for person in people]:
-            if not person in data:
-                data[person] = round(amount/len(people),2)
-            else:
-                data[person] += round(amount/len(people),2)
+        if type(button) == str:
+            pass
 
-    precheck_sum = sum(data.values())
-    total_value = round(precheck_sum+tax_input+tip_input+fees_input,2) # prefill the total
+        st.title('Venmo Requests Calculator')
+        st.write('Your one stop shop for personalized and accurate venmo requests.')
+        select_input = st.radio("Select input type", options=['Auto','Manual'])
+        if select_input == 'Manual':
+            receipt_input ,fees_input, tax_input, tip_input = manual_input()
+        else:
+            import image_rec as ir
+            receipt_input ,fees_input, tax_input, tip_input = ir.auto_input()
 
-    total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
-
+        total_input, data = total_calculator(receipt_input, fees_input, tax_input, tip_input)
+        
     try:
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
         my_total, my_food, tip_perc, tax_perc, fee_part = venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+    except ZeroDivisionError:
+        st.info("See the how to for more information!")
 
-    ##### LIVE TESTING AREA #####
+    if st.button("Share this page!"):
+        set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+        st.info("Copy the link and share with your friends!")
 
-    except:
-        st.warning("Something happened, please tell Pete!")
-        
-    #############################
-    # Database section
-    
-    st.write("Not required, but very fun")
-    col_save,col_show = st.beta_columns([0.33,1])
+    with st.beta_expander("Advanced settings"):
+        st.write("Not required, but very fun")
+        col_save,col_show = st.beta_columns([0.33,1])
 
     with col_show:
         button_show = st.button(label='Preview the Database')
@@ -264,7 +249,9 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
         #link_html = f"<a href='{link}' target='_blank'>Click me for {key}'s sake!</a>"
         #link_md = f"[Click me for {key}'s sake!](link)"
         link_output[key] = link
-
+    
+    tg_formatter(link_output)
+    
     html_table_data = f'''
 <tbody>'''
     venmo_logo = 'https://cdn1.venmo.com/marketing/images/branding/downloads/venmo_logo_blue.svg'
@@ -280,10 +267,157 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
         html_table_data += html_row
 
     html_table = html_table_header + html_table_data + html_table_end
-
     st.write(html_table, unsafe_allow_html=True)
     st.write('')
 
+def read_from_clipboard():
+    import streamlit as st
+    from bokeh.models.widgets import Button
+    from bokeh.models import CustomJS
+    from streamlit_bokeh_events import streamlit_bokeh_events
+    from io import StringIO
+    import pandas as pd
+
+
+    copy_button = Button(label="Get Clipboard Data")
+    copy_button.js_on_event("button_click", CustomJS(code="""
+        navigator.clipboard.readText().then(text => document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: text})))
+        """))
+    result = streamlit_bokeh_events(
+        copy_button,
+        events="GET_TEXT",
+        key="get_text",
+        refresh_on_update=False,
+        override_height=75,
+        debounce_time=0)
+
+    if result:
+        if "GET_TEXT" in result:
+            df = pd.read_csv(StringIO(result.get("GET_TEXT")))
+            st.table(df)
+    
+def copy_to_clipboard(text):
+    import streamlit as st
+    from bokeh.models.widgets import Button
+    from bokeh.models import CustomJS
+    from streamlit_bokeh_events import streamlit_bokeh_events
+    from io import StringIO
+    import pandas as pd
+    
+    copy_button = Button(label="Copy All of Me")
+    
+    html_code = f"""<!-- The text field -->
+    <input type="text" value="{text.replace(" ","%20")}" id="myInput">
+
+    <!-- The button used to copy the text -->
+    <button onclick="myFunction()">Copy text</button>"""
+    
+    js_code = """function myFunction() {
+    /* Get the text field */
+    var copyText = document.getElementById("myInput");
+
+    /* Select the text field */
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+
+    /* Alert the copied text */
+    alert("Copied the text: " + copyText.value);
+    }"""
+    st.write(html_code, unsafe_allow_html=True )
+    copy_button.js_on_event("button_click", CustomJS(code=js_code))
+    
+def set_params(my_dic, total, tax, tip, misc_fees):
+    st.experimental_set_query_params(
+        ppl=[my_dic],
+        total=total,
+        tax=tax,
+        tip=tip,
+        misc_fees=misc_fees
+    )
+    
+def use_params():
+    st.title('Venmo Requests Calculator')
+    st.write('Your one stop shop for personalized and accurate venmo requests.')
+    st.info("Looks like this is a shared link, so we filled in the info for you!")
+    info_dict = st.experimental_get_query_params()
+    
+    param_receipt = info_dict['ppl'][0].replace("{","")
+    param_receipt = param_receipt.replace("}","")
+    param_receipt = param_receipt.replace("'","")
+    
+    receipt_input = st.text_area(label="Add name and food prices*", value = param_receipt)
+    col1, col2, col3 = st.beta_columns(3)
+
+    with col1:
+        fees_input = st.number_input("Fees in dollars",step=1.0, value = float(info_dict['misc_fees'][0]))
+    with col2:
+        tax_input = st.number_input("Tax in dollars",step=1.0, value = float(info_dict['tax'][0]))
+    with col3:
+        tip_input = st.number_input("Tip in dollars",step=5.0, value = float(info_dict['tip'][0]))
+        
+    total_input, data = total_calculator(receipt_input, fees_input, tax_input, tip_input, param=True)
+    return total_input, data, tax_input, fees_input, tip_input
+    
+def total_calculator(receipt_input, fees_input, tax_input, tip_input, param=False):
+    """
+    Calculates the total amount spent using all variables. Separate function so we can take account for params
+    """
+    rf = receiptFormat()
+    # a dictionary of name(s) and sum of amount
+    raw_pairs = [(
+            rf.parse_alpha(alpha),
+            sum([float(i) for i in rf.parse_numbers(numbers)])
+        ) for (alpha, numbers) in re.findall(rf.pattern, receipt_input)]
+    # combine all split costs with the people involved
+    data = {}
+    for (people, amount) in raw_pairs:
+        for person in [person.capitalize() for person in people]:
+            if not person in data:
+                data[person] = round(amount/len(people),2)
+            else:
+                data[person] += round(amount/len(people),2)
+
+    precheck_sum = sum(data.values())
+    total_value = round(precheck_sum+tax_input+tip_input+fees_input,2) # prefill the total
+    total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)       
+    return total_input, data
+    
+def tg_formatter(link_output):
+    '''
+    Gets tg usernames from json, makes a tg link that sends all venmo requests to tg
+    
+    input
+    -----
+    link_output: dict
+        Dictionary of name: venmo link, from venmo_request() function
+    '''
+    message = ''
+   
+    df_tg = pd.read_json('tg_info.json')
+    df_tg['first_name'] = df_tg['first_name'].str.lower()
+    
+    user_dict = {}
+    for i, row in df_tg.iterrows():
+        for name in link_output.keys():
+            lname = name.lower()
+            if lname in row['first_name']:
+                user = df_tg.loc[i,'username']
+                user_dict[name] = link_output[name].replace(f"recipients={name}",f"recipients={user}")
+                
+    for name in user_dict.keys():
+        venmo_req = user_dict[name]
+        tg_message = f"__{name}__:%0A{venmo_req}%0A%0A"
+        message += tg_message   
+    
+   
+    ### Copy to clipboard, for easy pasting to tg ###
+    
+    # tg_open = f'tg://msg?text={message}'.replace(" ","%20")
+    # st.write(f'<a href="{tg_open}" target="_blank" rel="noopener noreferrer">Click me for TG</a>',unsafe_allow_html=True)
+    
 class saveInfo():
     def __init__(self, my_total=0, my_food=0, tip_perc=0, tax_perc=0, fee_part=0,showme='yes'):
         '''
