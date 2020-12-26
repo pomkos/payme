@@ -254,15 +254,15 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
     
     html_table_data = f'''
 <tbody>'''
-    venmo_logo = 'https://cdn1.venmo.com/marketing/images/branding/downloads/venmo_logo_blue.svg'
-
+    
+    venmo_logo = 'https://raw.githubusercontent.com/pomkos/payme/main/images/venmo_logo_blue.png'
     for key in request.keys():
         # append each person's rows to html table 
         html_row = f'''
 <tr>
     <td class="tg-0pky">{key}<br></td>
     <td class="tg-0pky">${round(request[key],2)}</td>
-    <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60"></a><br></td>
+    <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
 </tr>'''
         html_table_data += html_row
 
