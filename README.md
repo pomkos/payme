@@ -33,7 +33,7 @@ Just a simple repo to calculate how much to request from people after a night ou
 <img src="https://github.com/pomkos/payme/blob/main/images/whole_page.png" width="620">
 
 ## Postgres Database outline
-<img src="https://peti.drawerd.com/projects/1462/render_svg?share_key=b3ecaddcca136ca0dee2d537f06e22" width="720">
+<img src="https://peti.drawerd.com/projects/1462/render_svg?mode=accurate&share_key=b3ecaddcca136ca0dee2d537f06e22" width="720">
 
 # How tos
 ## Run
