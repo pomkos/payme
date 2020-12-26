@@ -7,6 +7,7 @@
     2. [Default View with Inputs](#default-view-with-inputs)
     3. [Default View without Inputs](#default-view-without-inputs)
     4. [Expanded Page](#expanded-page)
+    5. [Database Outline](#postgres-database-outline)
 3. [How-Tos](#how-tos)
     1. [Run](#run)
     2. [Host](#host)
