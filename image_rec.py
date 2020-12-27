@@ -55,7 +55,7 @@ def auto_input():
     else:
         text_str = ocr_image(my_receipt=my_receipt)
 
-    with st.beta_expander(label="OCR feedback"):
+    with st.beta_expander(label="Click me for OCR feedback"):
         col_img, col_extract = st.beta_columns(2)
         with col_img:
             st.success("Uploaded!")
@@ -86,9 +86,10 @@ def auto_input():
     extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
     extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
     
-    my_names = st.text_area("Separate names with a comma: peter, Russell")
+    my_names = st.text_input("Write names below, separated by a comma. Ex: peter, Russell")
     if not my_names:
-        st.info(f"""Add all __{extracted['participants']} names__ in the order that they appear on the receipt.""")
+        st.info(f"""Add all __{extracted['participants']} names__, separated by a comma, in the order that they appear on the receipt.""")
+        st.info(f"Click 'OCR feedback' to see your uploaded image")
         st.stop()
     my_names = my_names.split(',')
     if len(my_names)!=extracted['participants']:
@@ -141,16 +142,8 @@ def auto_input():
     # Extract totals, fees, tips, taxes
     ###
     not_people = tuple(all_money.loc[extracted['items']:]) # since each item is on its own line, the number of items is a good cutoff
-    if len(not_people) == 5: # if there are only 5, then no delivery fee was included
-        subtotal = not_people[0]
-        tax_input = not_people[1]
-        fees_input = not_people[2]
-        tip_input = not_people[3]
-        total = not_people[4]
-        with col_extract:
-            st.success("Data extracted!")
-            extracted_col(extracted,all_money,not_people,receipt_input,names)            
-    elif len(not_people) == 6: # delivery fee assumed to be included
+     
+    if len(not_people) == 6: # delivery fee assumed to be included
         subtotal = not_people[0]
         tax_input = not_people[1]
         fees_input = not_people[2]
@@ -160,6 +153,15 @@ def auto_input():
         with col_extract:
             st.success("Data extracted!")
             extracted_col(extracted,all_money,not_people,receipt_input,names)  
+    elif len(not_people) == 5: # if there are only 5, then no delivery fee was included
+        subtotal = not_people[0]
+        tax_input = not_people[1]
+        fees_input = not_people[2]
+        tip_input = not_people[3]
+        total = not_people[4]
+        with col_extract:
+            st.success("Data extracted!")
+            extracted_col(extracted,all_money,not_people,receipt_input,names)       
     elif len(not_people) == 3: # this was a pickup order, so no fees or tip
         subtotal = not_people[0]
         tax_input = not_people[1]
@@ -169,16 +171,29 @@ def auto_input():
         with col_extract:
             st.success("Data extracted!")
             extracted_col(extracted,all_money,not_people,receipt_input,names) 
+    elif len(not_people) == 4: # subtotal not detected, no delivery fee
+        with col_extract:
+            st.warning("I don't think I found the subtotal")
+            extracted_col(extracted,all_money,not_people,receipt_input,names) 
+        subtotal = 0
+        tax_input = not_people[0]
+        fees_input = not_people[1]
+        tip_input = not_people[2]
+        total = not_people[3]
     else:
         import pandas as pd
         st.warning(f"Expected 5 or 6 nonFood items, but found {len(not_people)}. Try manual input instead!")
         with col_extract:
             st.warning("Something went wrong. Did I OCR right?")
-            extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'bad')           
+            extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'bad')
+        st.stop()
           
     return receipt_input ,fees_input, tax_input, tip_input
 
 def extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'good'):
+    '''
+    Presents extracted information to the user in a column under the "ocr feedback" expander
+    '''
     import pandas as pd
     # present info
     combed_df = pd.DataFrame({
@@ -242,6 +257,9 @@ def extracted_col(extracted,all_money,not_people,receipt_input,names, status = '
                 if row['data'] == not_people[-3]: # find subtotal
                     row['category'] = 'subtotal' # rename subtotal
             st.table(combed_df.set_index('category'))
+        else:
+            # catchall, because sometimes there are 4 people and lots of fees
+            st.write(not_people)
     st.write("__Detected cost distribution:__")
     st.write(receipt_input.title())
 
