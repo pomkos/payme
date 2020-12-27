@@ -7,6 +7,7 @@
     2. [Default View with Inputs](#default-view-with-inputs)
     3. [Default View without Inputs](#default-view-without-inputs)
     4. [Expanded Page](#expanded-page)
+    5. [Database Outline](#postgres-database-outline)
 3. [How-Tos](#how-tos)
     1. [Run](#run)
     2. [Host](#host)
@@ -30,6 +31,9 @@ Just a simple repo to calculate how much to request from people after a night ou
 
 ## Expanded Page
 <img src="https://github.com/pomkos/payme/blob/main/images/whole_page.png" width="620">
+
+## Postgres Database outline
+<img src="https://peti.drawerd.com/projects/1462/render_svg?mode=accurate&share_key=b3ecaddcca136ca0dee2d537f06e22" width="720">
 
 # How tos
 ## Run
