@@ -36,7 +36,7 @@ def start(button=None):
 
         st.title('Venmo Requests Calculator')
         st.write('Your one stop shop for personalized and accurate venmo requests.')
-        select_input = st.radio("Select input type", options=['Auto','Manual'])
+        select_input = st.radio("Select input type", options=['Auto (beta)','Manual'],index=1)
         if select_input == 'Manual':
             receipt_input ,fees_input, tax_input, tip_input = manual_input()
         else:
