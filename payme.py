@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import re
 import sys
 
@@ -52,7 +53,7 @@ def start(button=None):
 
     if st.button("Share this page!"):
         set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
-        st.info("Copy the link and share with your friends!")
+        st.info("Copy the url and share with your friends!")
 
     with st.beta_expander("Advanced settings"):
         st.write("Not required, but very fun")
@@ -442,22 +443,22 @@ class saveInfo():
         from pytz import timezone 
 
         # initialize engine
-        engine = sq.create_engine(f'postgres://{us_pw}@{db_ip}:{port}')
-       
+        engine = sq.create_engine(f'postgres://{us_pw}@{db_ip}:{port}/payme')
+        cnx = engine.connect()
         meta = sq.MetaData()
+        meta.reflect(bind=engine) # get metadata
+        self.payme_now = meta.tables['payme_now'] # load metadata of payme_now table
+        column = pd.Series(cnx.execute(sq.select([self.payme_now.c.id]))) # select ID column, load as a series
+        group_id = np.random.randint(1000,6000) # create random integer for the group
+        for x in range(10): # check that group_id is not alread in column
+            if group_id in column:
+                group_id = np.random.randint(1000,6000)
+
+        if group_id in column:
+            st.error("Group ID is already in the table, try again")
+            st.stop()
+
         if showme=='no':
-        # table format in db
-            self.payme_now = sq.Table(
-               'payme_now', meta, 
-               sq.Column('id', sq.Integer, primary_key = True), 
-               sq.Column('date',sq.DateTime),
-               sq.Column('name', sq.String), 
-               sq.Column('food', sq.Float),
-               sq.Column('tip',sq.Float),
-               sq.Column('tax',sq.Float),
-               sq.Column('fees',sq.Float),
-               sq.Column('total',sq.Float)
-            )
 
             # format data into proper list of dictionaries
             tz = timezone('US/Eastern')
@@ -465,6 +466,7 @@ class saveInfo():
 
             for key in my_total.keys():
                 person = {
+                    'txn_id':group_id, # assign random integer
                     'date':dt.datetime.now(tz),
                     'name':key,
                     'food':my_food[key],
