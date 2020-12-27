@@ -15,7 +15,7 @@
 <g id="a_node1"><a xlink:href="javascript:window.parent.edit_table('/projects/1462/tables/18985/edit');" xlink:title="&lt;TABLE&gt;">
 <polygon fill="#ececfc" stroke="transparent" points="660,-172 660,-206 848,-206 848,-172 660,-172"/>
 <polygon fill="none" stroke="#000000" points="660,-172 660,-206 848,-206 848,-172 660,-172"/>
-<text text-anchor="start" x="735" y="-192.8" font-family="Times,serif" font-weight="bold" font-size="14.00" fill="#000000">details</text>
+<text text-anchor="start" x="718.5" y="-192.8" font-family="Times,serif" font-weight="bold" font-size="14.00" fill="#000000">transactions</text>
 <text text-anchor="start" x="677" y="-178.8" font-family="Times,serif" font-weight="bold" font-size="14.00" fill="#000000">itemized list of food prices</text>
 <polygon fill="#01f800" stroke="transparent" points="660,-151 660,-172 725,-172 725,-151 660,-151"/>
 <polygon fill="none" stroke="#000000" points="660,-151 660,-172 725,-172 725,-151 660,-151"/>
@@ -25,7 +25,7 @@
 <text text-anchor="start" x="728" y="-157.8" font-family="Times,serif" font-size="14.00" fill="#000000">integer</text>
 <polygon fill="#01f800" stroke="transparent" points="769,-151 769,-172 848,-172 848,-151 769,-151"/>
 <polygon fill="none" stroke="#000000" points="769,-151 769,-172 848,-172 848,-151 769,-151"/>
-<text text-anchor="start" x="772" y="-157.8" font-family="Times,serif" font-size="14.00" fill="#000000">[pk, not null]</text>
+<text text-anchor="start" x="793" y="-157.8" font-family="Times,serif" font-size="14.00" fill="#000000">[not null]</text>
 <polygon fill="#01f800" stroke="transparent" points="660,-130 660,-151 725,-151 725,-130 660,-130"/>
 <polygon fill="none" stroke="#000000" points="660,-130 660,-151 725,-151 725,-130 660,-130"/>
 <text text-anchor="start" x="663" y="-136.8" font-family="Times,serif" font-size="14.00" fill="#000000">id</text>
@@ -43,7 +43,7 @@
 <text text-anchor="start" x="728" y="-115.8" font-family="Times,serif" font-size="14.00" fill="#000000">integer</text>
 <polygon fill="#01f800" stroke="transparent" points="769,-109 769,-130 848,-130 848,-109 769,-109"/>
 <polygon fill="none" stroke="#000000" points="769,-109 769,-130 848,-130 848,-109 769,-109"/>
-<text text-anchor="start" x="793" y="-115.8" font-family="Times,serif" font-size="14.00" fill="#000000">[not null]</text>
+<text text-anchor="start" x="772" y="-115.8" font-family="Times,serif" font-size="14.00" fill="#000000">[pk, not null]</text>
 <polygon fill="#01f800" stroke="transparent" points="660,-88 660,-109 725,-109 725,-88 660,-88"/>
 <polygon fill="none" stroke="#000000" points="660,-88 660,-109 725,-109 725,-88 660,-88"/>
 <text text-anchor="start" x="663" y="-94.8" font-family="Times,serif" font-size="14.00" fill="#000000">food_price</text>

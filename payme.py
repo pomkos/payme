@@ -36,21 +36,24 @@ def start(button=None):
 
         st.title('Venmo Requests Calculator')
         st.write('Your one stop shop for personalized and accurate venmo requests.')
-        select_input = st.radio("Select input type", options=['Auto (beta)','Manual'],index=1)
-        if select_input == 'Manual':
-            receipt_input ,fees_input, tax_input, tip_input = manual_input()
-        else:
+        select_input = st.radio("Select input type", options=['Auto (beta)','Manual', 'Alpha'],index=1)
+           
+        if 'Auto' in select_input:
             import image_rec as ir
             receipt_input ,fees_input, tax_input, tip_input = ir.auto_input()
+        else:
+            receipt_input, fees_input, tax_input, tip_input = manual_input()
 
         total_input, data = total_calculator(receipt_input, fees_input, tax_input, tip_input)
         
     try:
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
         my_total, my_food, tip_perc, tax_perc, fee_part = venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+
     except ZeroDivisionError:
         st.info("See the how to for more information!")
-
+   
+    ###################
     if st.button("Share this page!"):
         set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
         st.info("Copy the url and share with your friends!")
@@ -74,6 +77,26 @@ def start(button=None):
         dataframe = dataframe.iloc[:,1:]
         show_me = dataframe.tail()
         st.table(show_me)
+        
+    ###################
+    # TESTING GROUNDS #
+    ###################
+    if select_input == 'Alpha':
+        import alpha_users
+        alpha_input = receipt_input
+        
+        rf = receiptFormat()
+        # same as raw_pairs in total_calculator(), but without summing and as a dictionary
+        alpha_dict = {}
+        for alpha, numbers in re.findall(rf.pattern, receipt_input):
+            for i in rf.parse_numbers(numbers):
+                name = rf.parse_alpha(alpha)[0]
+                if name in alpha_dict.keys():
+                    alpha_dict[name] += [float(i)]
+                else:
+                    alpha_dict[name] = [float(i)]
+        alpha_users.app(my_dic = alpha_dict, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+        "_________________________"
 
 def manual_input():
     '''
@@ -364,7 +387,7 @@ def use_params():
     
 def total_calculator(receipt_input, fees_input, tax_input, tip_input, param=False):
     """
-    Calculates the total amount spent using all variables. Separate function so we can take account for params
+    Calculates the total amount spent using all variables. Separated function so we can take account for params
     """
     rf = receiptFormat()
     # a dictionary of name(s) and sum of amount
