@@ -105,15 +105,12 @@ def create_token(us_pw, db_ip, port):
         * Your __access token__ is saved in encrypted form with the use of your personalized encryption key. This app cannot access your token without the personalized password.
         * Since the password is never saved, it must be entered on each use.""")
         
-    colu, colp = st.beta_columns(2)
-    with colu:
-        user = st.text_input("Who are you?")
-    with colp:
-        pw = st.text_input("Create a Password", type="password")
-    token = st.text_input("Access Token", type="password")
-    st.info(f"Get your access token by clicking [here]({access_code_link})")
+    user = st.sidebar.text_input("Who are you?")
+    pw = st.sidebar.text_input("Create a Password", type="password")
+    token = st.sidebar.text_input("Access Token", type="password")
+    st.sidebar.info(f"Get your access token by clicking [here]({access_code_link})")
     
-    if st.button('Submit'):
+    if st.sidebar.button('Submit'):
         token_enc = password_encrypt(token.encode(), pw)
         token = dbTokenizer(us_pw, db_ip, port)
         token.save_token(my_id, token_enc.decode())
@@ -306,7 +303,7 @@ def app(my_dic, total, tax, tip, misc_fees, messages, db_info):
     us_pw, db_ip, port = db_info[0],db_info[1],db_info[2]
     st.write('# Venmo Login Alpha')
     st.warning("Currently in alpha, testing automated venmo requests")
-    choice = st.sidebar.selectbox("Do what",["Login","Create token"])
+    choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
     if choice == "Login":
         token, name = get_access_token(us_pw, db_ip, port)
         venmo = venmoThings(token)
@@ -328,7 +325,7 @@ def app(my_dic, total, tax, tip, misc_fees, messages, db_info):
     
     st.write("## Confirm Requests")
     st.write("Double check everything, then submit when ready.")
-    edit = st.checkbox("I want to edit the message")
+    edit = st.checkbox("Let me edit the message")
     if edit:
         st.warning("Too bad, not going to happen.")
         st.stop()
