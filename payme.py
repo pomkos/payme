@@ -78,8 +78,8 @@ def start(button=None):
         
     # add parameters to url for easy sharing
     if st.button("Share the calculation"):
-        from apps import alpha_clipboard as ac:
-            ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
+        from apps import alpha_clipboard as ac
+        ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
         
     ###################
     # TESTING GROUNDS #
