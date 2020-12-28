@@ -8,6 +8,8 @@ us_pw = sys.argv[1]  # user input: "my_user:password"
 db_ip = sys.argv[2]  # user input: 192.168.1.11
 port = sys.argv[3]   # user input: 5432
 
+db_info = [us_pw, db_ip, port]
+
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
@@ -36,9 +38,9 @@ def start(button=None):
 
         st.title('Venmo Requests Calculator')
         st.write('Your one stop shop for personalized and accurate venmo requests.')
-        select_input = st.radio("Select input type", options=['Auto (beta)','Manual', 'Alpha'],index=1)
+        select_input = st.sidebar.radio("Select input type", options=['Manual','Auto Request (alpha)','OCR (beta)'],index=0)
            
-        if 'Auto' in select_input:
+        if 'beta' in select_input:
             import image_rec as ir
             receipt_input ,fees_input, tax_input, tip_input = ir.auto_input()
         else:
@@ -48,11 +50,15 @@ def start(button=None):
         
     try:
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
-        my_total, my_food, tip_perc, tax_perc, fee_part = venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+        my_total, my_food, tip_perc, tax_perc, fee_part, api_messages = venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
 
     except ZeroDivisionError:
-        st.info("See the how to for more information!")
+        my_total = None
    
+    if not my_total:
+        st.info("See the how to for more information!")
+        st.stop()
+        
     ###################
     if st.button("Share this page!"):
         set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
@@ -69,6 +75,7 @@ def start(button=None):
 
         try:
             if button_save == True:
+                ### THIS IS WHERE ITEMIZED SHOULD BE SAVED
                 saveus = saveInfo(my_total, my_food, tip_perc, tax_perc, fee_part,showme='no')
                 saveus.save_table()
                 st.balloons()
@@ -85,22 +92,13 @@ def start(button=None):
     ###################
     # TESTING GROUNDS #
     ###################
-    if select_input == 'Alpha':
+    if ('alpha' in select_input) and my_total:
         import alpha_users
-        alpha_input = receipt_input
-        
-        rf = receiptFormat()
-        # same as raw_pairs in total_calculator(), but without summing and as a dictionary
-        alpha_dict = {}
-        for alpha, numbers in re.findall(rf.pattern, receipt_input):
-            for i in rf.parse_numbers(numbers):
-                name = rf.parse_alpha(alpha)[0]
-                if name in alpha_dict.keys():
-                    alpha_dict[name] += [float(i)]
-                else:
-                    alpha_dict[name] = [float(i)]
-        alpha_users.app(my_dic = alpha_dict, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input)
+        alpha_users.app(my_dic = my_total, total=total_input, 
+                        tax=tax_input, tip=tip_input, misc_fees=fees_input,
+                        messages = api_messages, db_info = db_info)
         "_________________________"
+
 
 def manual_input():
     '''
@@ -236,9 +234,9 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
         df_out = df_out.T
         df_out.columns = ['Amount']
 
-        venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out)
+        api_messages = venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out)
 
-        return output_money, my_dic, tip_perc, tax_perc, fee_part
+        return output_money, my_dic, tip_perc, tax_perc, fee_part, api_messages
 
 def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df_out):
     '''
@@ -256,7 +254,7 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
     </tbody>
     </table>'''
     link_output = {}
-
+    api_output = {}
     for key in request.keys():
         txn = 'charge' # charge or pay
         audience = 'private' # private, friends, or public
@@ -273,6 +271,7 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
 
         statement += '.%0AMade with %3C3 at payme.peti.work' # %0A creates a new line
         statement = statement.replace(' ','%20') # replace spaces for url parameter
+        api_output[key] = statement
         link = f"https://venmo.com/?txn={txn}&audience={audience}&recipients={key}&amount={amount}&note={statement}"
         #link_html = f"<a href='{link}' target='_blank'>Click me for {key}'s sake!</a>"
         #link_md = f"[Click me for {key}'s sake!](link)"
@@ -297,6 +296,7 @@ def venmo_request(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees,df
     html_table = html_table_header + html_table_data + html_table_end
     st.write(html_table, unsafe_allow_html=True)
     st.write('')
+    return api_output
 
 def read_from_clipboard():
     import streamlit as st
