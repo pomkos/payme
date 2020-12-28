@@ -1,4 +1,37 @@
 # archive from trying to make one-click copy to clipboard a reality
+
+def set_params(my_dic, total, tax, tip, misc_fees, view, share=False):
+    'Adds parameters to url'
+    st.experimental_set_query_params(
+        ppl=[my_dic],
+        total=total,
+        tax=tax,
+        tip=tip,
+        misc_fees=misc_fees,
+        view=view,
+        share=share
+    )
+    
+def use_params():
+    '''
+    Extracts and returns all parameters from the url
+    '''
+    info_dict = st.experimental_get_query_params()
+    st.write(info_dict)
+    param_receipt = info_dict['ppl'][0].replace("{","")
+    param_receipt = param_receipt.replace("}","")
+    param_receipt = param_receipt.replace("'","")
+    
+    receipt_input = param_receipt
+    fees_input = float(info_dict['misc_fees'][0])
+    tax_input = float(info_dict['tax'][0])
+    tip_input = float(info_dict['tip'][0])
+    select_input = info_dict['view'][0]
+    share = bool(info_dict['share'][0])
+   
+    return_us = [tax_input,fees_input,tip_input,share]
+    return return_us
+
 def read_from_clipboard():
     import streamlit as st
     from bokeh.models.widgets import Button

@@ -9,42 +9,6 @@ import numpy as np
 
 access_code_link = "https://api.venmo.com/v1/oauth/authorize?client_id=1112&scope=access_profile,make_payments&response_type=code"
 
-class dbTokenizer():
-    def __init__(self, us_pw, db_ip, port):
-        '''
-        Initializes db for saving or loading encrypted venmo tokens.
-        '''
-        engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-        self.cnx = engine.connect()
-        meta = sq.MetaData()
-        meta.reflect(engine)
-
-        self.table = meta.tables['secret']
-        
-    def save_token(self, my_id, token):
-        '''
-        Saves the encrypted token to db.
-        '''
-        cnx = self.cnx
-        table = self.table
-        query = sq.insert(table)
-        value = {'id':my_id,'token':token}
-        cnx.execute(query, value)
-
-    def get_token(self,my_id):
-        '''
-        Gets encrypted token from db.
-        '''
-        table = self.table
-        cnx = self.cnx
-        query = sq.select([table]).where(table.c.id==my_id)
-        resultset = cnx.execute(query).fetchall()
-        df = pd.DataFrame(resultset)
-        df.columns = resultset[0].keys()
-        df = df.set_index('id')
-        token = df.loc[my_id,'token']
-        return token
-        
 
 #########################
 ### Encryption Region ###
@@ -71,6 +35,7 @@ def _derive_key(password: bytes, salt: bytes, iterations: int = iterations) -> b
     return b64e(kdf.derive(password))
 
 def password_encrypt(message: bytes, password: str, iterations: int = iterations) -> bytes:
+    "Encrypts message using a password"
     salt = secrets.token_bytes(16)
     key = _derive_key(password.encode(), salt, iterations)
     return b64e(
@@ -81,6 +46,7 @@ def password_encrypt(message: bytes, password: str, iterations: int = iterations
         ))
 
 def password_decrypt(token: bytes, password: str) -> bytes:
+    "Decripts message given the correct password"
     decoded = b64d(token)
     salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
     iterations = int.from_bytes(iter, 'big')
@@ -98,6 +64,7 @@ def create_token(us_pw, db_ip, port):
     Uses the encrypt function create an encrypted token. Returns token + user submitted pw.
     '''
     # Explain to user
+    import db_tool
     with st.sidebar.beta_expander("Click me for more info"):
         st.write("""
         * Your __password__ will not be saved. Instead, it is salted and used with Fernet encryption to create a personalized encryption key.
@@ -111,7 +78,7 @@ def create_token(us_pw, db_ip, port):
     
     if st.sidebar.button('Submit'):
         token_enc = password_encrypt(token.encode(), pw)
-        token = dbTokenizer(us_pw, db_ip, port)
+        token = db_tool.dbTokenizer(us_pw, db_ip, port)
         token.save_token(my_id, token_enc.decode())
         st.success("Submitted! Remember your password, because we won't.")
         st.info("Login to continue!")
@@ -179,6 +146,7 @@ def get_access_token(us_pw, db_ip, port):
     Prompts for info to initiate get_user_id and db_tokenizer functions
     Grabs access token of selected user from db
     '''
+    import db_tool
     coln,colpw = st.beta_columns(2)
     with coln:
         name = st.sidebar.text_input("Enter name*")
@@ -189,7 +157,7 @@ def get_access_token(us_pw, db_ip, port):
     if name and pw:
         my_id = get_user_id(name, us_pw, db_ip, port)
     
-        token = dbTokenizer(us_pw, db_ip, port) # initialize db cnx
+        token = db_tool.dbTokenizer(us_pw, db_ip, port) # initialize db cnx
         token = token.get_token(my_id) # get token using id
         access_token = password_decrypt(token.encode(), pw).decode()
         return access_token, name
@@ -260,11 +228,10 @@ class venmoThings():
             Not attach to payment
         '''
         self.txn.send_money(amount = amount, note = message, target_user_id = self.my_id)
-
         
-#######################
-### Main App Region ###
-#######################
+##########################
+### Helper Fctn Region ###
+##########################
 
 def format_names(my_str):
     'for use with format_fun arg, capitalizes string'
@@ -297,6 +264,10 @@ def paramtext_formatter(messages):
         message = message.replace('%3C','<') # less than sign
         neat_messages[name] = message
     return neat_messages
+
+#######################
+### Main App Region ###
+#######################
 
 def app(my_dic, total, tax, tip, misc_fees, messages, db_info):
     us_pw, db_ip, port = db_info[0],db_info[1],db_info[2]
