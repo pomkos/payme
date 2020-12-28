@@ -1,8 +1,14 @@
 pytesseract==0.3.7
+numpy==1.19.4
+SQLAlchemy==1.3.20
+pdf2image==1.14.0
+venmo_api==0.2.2
+streamlit_bokeh_events==0.1.2
 streamlit==0.73.1
 pandas==1.1.3
-pdf2image==1.14.0
-SQLAlchemy==1.3.20
+bokeh==2.2.3
+cryptography==3.3.1
 pytz==2020.1
 Pillow==8.0.1
 python_magic==0.4.18
+secrets==1.0.2
