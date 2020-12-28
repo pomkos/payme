@@ -1,3 +1,5 @@
+# core app. Redirects to appropriate apps.
+
 # libraries
 import streamlit as st
 st.set_page_config(page_title = 'Venmo Calculator')
@@ -47,7 +49,7 @@ def start(button=None):
         pass
     select_input = st.sidebar.radio("Select input type", options=['Manual','Auto (alpha)','Image (beta)'],index=0)
     if 'beta' in select_input:
-        from apps import image_rec as ir
+        from apps import beta_image_rec as ir
         gui = '(Beta)'
         receipt_input ,fees_input, tax_input, tip_input = ir.auto_input(gui)
     elif 'alpha' in select_input:
@@ -76,7 +78,8 @@ def start(button=None):
         
     # add parameters to url for easy sharing
     if st.button("Share the calculation"):
-        set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
+        from apps import alpha_clipboard as ac:
+            ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
         
     ###################
     # TESTING GROUNDS #
@@ -87,38 +90,6 @@ def start(button=None):
                         tax=tax_input, tip=tip_input, misc_fees=fees_input,
                         messages = messages, db_info = db_info)
         "_________________________"
-    
-def set_params(my_dic, total, tax, tip, misc_fees, view, share=False):
-    'Adds parameters to url'
-    st.experimental_set_query_params(
-        ppl=[my_dic],
-        total=total,
-        tax=tax,
-        tip=tip,
-        misc_fees=misc_fees,
-        view=view,
-        share=share
-    )
-    
-def use_params():
-    '''
-    Extracts and returns all parameters from the url
-    '''
-    info_dict = st.experimental_get_query_params()
-    st.write(info_dict)
-    param_receipt = info_dict['ppl'][0].replace("{","")
-    param_receipt = param_receipt.replace("}","")
-    param_receipt = param_receipt.replace("'","")
-    
-    receipt_input = param_receipt
-    fees_input = float(info_dict['misc_fees'][0])
-    tax_input = float(info_dict['tax'][0])
-    tip_input = float(info_dict['tip'][0])
-    select_input = info_dict['view'][0]
-    share = bool(info_dict['share'][0])
-   
-    return_us = [tax_input,fees_input,tip_input,share]
-    return return_us
 
 def app():
     '''
