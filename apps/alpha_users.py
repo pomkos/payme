@@ -89,7 +89,7 @@ def password_decrypt(token: bytes, password: str) -> bytes:
         token = Fernet(key).decrypt(token)
         return token
     except:
-        st.error("Password is incorrect, unable to decrypt token")
+        st.sidebar.error("Incorrect password")
         st.stop()
 
 def create_token(us_pw, db_ip, port):
@@ -98,9 +98,9 @@ def create_token(us_pw, db_ip, port):
     Uses the encrypt function create an encrypted token. Returns token + user submitted pw.
     '''
     # Explain to user
-    with st.beta_expander("Click me for more info"):
+    with st.sidebar.beta_expander("Click me for more info"):
         st.write("""
-        * Your __password__ will not be saved. Instead, it is used along with Fernet encryption to create a personalized encryption key.
+        * Your __password__ will not be saved. Instead, it is salted and used with Fernet encryption to create a personalized encryption key.
         * Your __access token__ is saved in encrypted form with the use of your personalized encryption key. This app cannot access your token without the personalized password.
         * Since the password is never saved, it must be entered on each use.""")
         
@@ -300,8 +300,7 @@ def paramtext_formatter(messages):
 
 def app(my_dic, total, tax, tip, misc_fees, messages, db_info):
     us_pw, db_ip, port = db_info[0],db_info[1],db_info[2]
-    st.write('# Venmo Login Alpha')
-    st.warning("Currently in alpha, testing automated venmo requests")
+    st.sidebar.warning("Contact Pete to opt in.")
     choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
     if choice == "Login":
         token, name = get_access_token(us_pw, db_ip, port)
