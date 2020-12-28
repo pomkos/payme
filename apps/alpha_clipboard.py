@@ -1,3 +1,4 @@
+import streamlit as st
 # archive from trying to make one-click copy to clipboard a reality
 
 def set_params(my_dic, total, tax, tip, misc_fees, view, share=False):
