@@ -146,7 +146,7 @@ def get_access_token(us_pw, db_ip, port):
     Prompts for info to initiate get_user_id and db_tokenizer functions
     Grabs access token of selected user from db
     '''
-    import db_tool
+    from apps import db_tool
     coln,colpw = st.beta_columns(2)
     with coln:
         name = st.sidebar.text_input("Enter name*")

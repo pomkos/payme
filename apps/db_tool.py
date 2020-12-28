@@ -1,3 +1,6 @@
+import streamlit as st
+import sqlalchemy as sq
+import pandas as pd
 # Everything you need to mess with the dataset
 
 def adv_settings():
