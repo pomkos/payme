@@ -1,3 +1,4 @@
+# GUI for receipt upload option
 import streamlit as st
 
 @st.cache
@@ -35,13 +36,14 @@ def ocr_pdf(my_receipt):
         page.save(f"temp/page{i}.jpg",'JPEG')
         i+=1
     
-def auto_input():
+def auto_input(gui):
     '''
     Main auto function, decides pdf vs image then organize extracted info
     '''
     from PIL import Image
     import magic
-
+    st.title(f'Venmo Requests Calculator {gui}')
+    st.write('Leave the typing, calculating, and requesting up to us!')
     my_receipt = st.file_uploader("Upload a screenshot or receipt",type=['png','jpg','jpeg','pdf'])
     if not my_receipt:
         st.info("Upload a screenshot of the full DoorDash receipt!")
@@ -265,4 +267,4 @@ def extracted_col(extracted,all_money,not_people,receipt_input,names, status = '
     st.write("__Detected cost distribution:__")
     st.write(receipt_input.title())
 
-auto_input()
+auto_input(gui='(Beta)')
