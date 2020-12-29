@@ -12,6 +12,7 @@ def manual_input(gui, params):
     else:
         total_inputp=0.0
         datap=''
+        describep=''
         tax_inputp=0.0
         fees_inputp=0.0
         tip_inputp=0.0
@@ -39,7 +40,7 @@ def manual_input(gui, params):
                 Russell 11.01 15.89 1.99
                 ```
             2. Input the rest of the fees or tips as needed""")
-
+    description = st.text_input(label="(Optional) Description, like the restaurant name", value=describep)
     receipt_input = st.text_area(label="Add name and food prices*", value=datap)
     col1, col2, col3 = st.beta_columns(3)
 
@@ -49,7 +50,13 @@ def manual_input(gui, params):
         tax_input = st.number_input("Tax in dollars",step=1.0, value=tax_inputp)
     with col3:
         tip_input = st.number_input("Tip in dollars",step=5.0, value=tip_inputp)
-    return receipt_input ,fees_input, tax_input, tip_input
+
+    return_me = {'description':description, 
+                 'receipt_input':receipt_input, 
+                 'fees_input':fees_input, 
+                 'tax_input':tax_input,
+                 'tip_input':tip_input}
+    return return_me
 
 def html_table(link_output, request_money):
     '''

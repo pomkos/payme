@@ -6,7 +6,7 @@ import numpy as np
 import re
 import sys
 
-def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0, clean=False):
+def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=False):
     """
     Returns lump sums to request using venmo
 
@@ -84,15 +84,15 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0, clean=False):
         request_money = {}
         for key in request.keys():
             request_money[key] = [round(request[key],2)]
-        data = [request_money, tip_perc, tax_perc, fee_part]
         from apps import manual_mode as mm
         # get dictionary of name:message
-        messages = venmo_message_maker(request_money,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=clean)
-        data.append(messages)
+        messages = venmo_message_maker(description,request_money,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=clean)
         
+        data = {"request_money":request_money,
+                "messages":messages}       
         return data
     
-def venmo_message_maker(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=False):
+def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=False):
     '''
     Generates a message or link that directs user to venmo app with prefilled options
     '''
@@ -104,7 +104,10 @@ def venmo_message_maker(request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_f
         amount = request[key] # total requested dollars
 
         # statement construction
-        statement = f'Hi {key}! Food was ${round(my_dic[key],2)}'
+        statement = f'Hi {key}! Food '
+        if description:
+            statement+= f'at {description.title()} '
+        statement+= f'was ${round(my_dic[key],2)}'
         if tip > 0.0:
             statement += f', tip was {round(tip_perc*100,2)}%25'
         if tax > 0.0:
@@ -151,7 +154,7 @@ class receiptFormat():
         'Splits "12.2 12.3 56 53.2" -> "[12.2,12.3,56,53.2]"'
         return list(filter(None, re.split('(?:[^\\d\\.])', numbers)))
 
-def total_calculator(receipt_input, fees_input, tax_input, tip_input):
+def total_calculator(description, receipt_input, fees_input, tax_input, tip_input):
     """
     Calculates the total amount spent using all variables. Separated function so we can take account for params
     """

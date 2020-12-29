@@ -4,6 +4,69 @@ import pandas as pd
 import numpy as np
 
 #######################
+### Main App Region ###
+#######################
+
+def app(my_dic, total, messages, db_info):
+    from apps import db_tool
+    us_pw, db_ip, port = db_info[0],db_info[1],db_info[2]
+    st.sidebar.warning("Contact Pete to opt in.")
+    choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
+    if choice == "Login":
+        token, name = get_access_token(us_pw, db_ip, port)
+        venmo = venmoThings(token)
+        st.sidebar.success("Success! Access token found, decrypted, and verified with Venmo.")
+    else:
+        create_token(us_pw, db_ip, port)
+        st.stop()
+           
+    neat_messages = paramtext_formatter(messages)
+    request_dict = {}
+    for person, to_request in my_dic.items():
+        if person.lower() == name.lower(): # this is the requester
+            my_total = to_request[0]
+        else:
+            amount = to_request[0]
+            message = neat_messages[person]
+            request_dict[person] = (amount, message)
+    st.info(f"Hi {name.title()}, we can now auto request ${round(total-my_total,2)} from your friends. Your portion was ${my_total}.")
+    
+    st.write("## Confirm Requests")
+    st.write("Double check everything, then submit when ready.")
+    edit = st.checkbox("Let me edit the message")
+    if edit:
+        st.warning("Too bad, not going to happen.")
+        st.stop()
+    
+    friends = []
+    monies = []
+    messages = []
+    for person, data in request_dict.items():
+        friends.append(person)
+        monies.append(data[0])
+        messages.append(data[1])
+        
+    confirm_df = pd.DataFrame({
+        'person':friends,
+        'amount':monies,
+        'message':messages
+    })
+    st.table(confirm_df.set_index('person'))
+    num_ppl = len(request_dict.keys())
+    progress = st.progress(0)
+    good = st.button('Request them!')
+    if good:
+        i = 0
+        for person in request_dict.keys():
+            my_id, venmo_id = db_tool.get_secrets(person.lower(), us_pw, db_ip, port)
+            venmo.request(amount = request_dict[person][0], message = request_dict[person][1], target_user_id = venmo_id)
+            progress.progress((i+1/num_ppl))
+            i+=1/num_ppl
+        st.balloons()
+        st.success("Money requested!")
+            
+
+#######################
 ### Database Region ###
 #######################
 
@@ -64,7 +127,7 @@ def create_token(us_pw, db_ip, port):
     Uses the encrypt function create an encrypted token. Returns token + user submitted pw.
     '''
     # Explain to user
-    import db_tool
+    from apps import db_tool
     with st.sidebar.beta_expander("Click me for more info"):
         st.write("""
         * Your __password__ will not be saved. Instead, it is salted and used with Fernet encryption to create a personalized encryption key.
@@ -85,62 +148,6 @@ def create_token(us_pw, db_ip, port):
         st.stop()
         # not returning anything to force user to login
 
-def get_user_id(my_name, us_pw, db_ip, port):
-    '''
-    get user id from names
-    '''
-    import sqlalchemy as sq
-    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-    cnx = engine.connect()
-    meta = sq.MetaData()
-    meta.reflect(engine)
-    users = meta.tables['users']   
-
-    name = my_name.lower()
-    query = sq.select([users.c.id]).where(users.c.name.contains(my_name))
-    resultset = cnx.execute(query).fetchall()
-    if not resultset:
-        query = sq.select([users.c.id]).where(users.c.nicknames.contains(my_name))
-        resultset = cnx.execute(query).fetchall()
-    if not resultset:
-        st.warning(f"User {my_name} not found.")
-        st.stop()
-    else:
-        if len(resultset)==1:
-            user_ids = resultset[0][0]
-        else:
-            st.warning("Multiple possible users found")
-    return user_ids
-
-def get_secrets(my_name, us_pw, db_ip, port):
-    '''
-    Get local_id and venmo_numid from local db
-    '''
-    import sqlalchemy as sq
-    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-    cnx = engine.connect()
-    meta = sq.MetaData()
-    meta.reflect(engine)
-    temp = meta.tables['temp']
-    
-    name = my_name.lower()
-    query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.name.contains(name)) 
-    resultset = cnx.execute(query).fetchall()
-    if not resultset:
-        query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.nicknames.contains(name))
-        resultset = cnx.execute(query).fetchall()
-        
-    result_list = list(resultset[0])
-    if not resultset:
-        st.warning(f"User {my_name} not found.")
-        st.stop()
-    else:
-        if len(result_list)==2:
-            user_id = result_list[0]
-            venmo_id = result_list[1]
-        else:
-            st.warning("Multiple possible users found")
-    return user_id, venmo_id
 def get_access_token(us_pw, db_ip, port):
     '''
     Prompts for info to initiate get_user_id and db_tokenizer functions
@@ -155,7 +162,7 @@ def get_access_token(us_pw, db_ip, port):
         pw = st.sidebar.text_input("Enter password*", type="password")
         
     if name and pw:
-        my_id = get_user_id(name, us_pw, db_ip, port)
+        my_id = db_tool.get_user_id(name, us_pw, db_ip, port)
     
         token = db_tool.dbTokenizer(us_pw, db_ip, port) # initialize db cnx
         token = token.get_token(my_id) # get token using id
@@ -264,65 +271,3 @@ def paramtext_formatter(messages):
         message = message.replace('%3C','<') # less than sign
         neat_messages[name] = message
     return neat_messages
-
-#######################
-### Main App Region ###
-#######################
-
-def app(my_dic, total, tax, tip, misc_fees, messages, db_info):
-    us_pw, db_ip, port = db_info[0],db_info[1],db_info[2]
-    st.sidebar.warning("Contact Pete to opt in.")
-    choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
-    if choice == "Login":
-        token, name = get_access_token(us_pw, db_ip, port)
-        venmo = venmoThings(token)
-        st.sidebar.success("Success! Access token found, decrypted, and verified with Venmo.")
-    else:
-        create_token(us_pw, db_ip, port)
-        st.stop()
-           
-    neat_messages = paramtext_formatter(messages)
-    request_dict = {}
-    for person, to_request in my_dic.items():
-        if person.lower() == name.lower(): # this is the requester
-            my_total = to_request[0]
-        else:
-            amount = to_request[0]
-            message = neat_messages[person]
-            request_dict[person] = (amount, message)
-    st.info(f"Hi {name.title()}, we can now auto request ${round(total-my_total,2)} from your friends. Your portion was ${my_total}.")
-    
-    st.write("## Confirm Requests")
-    st.write("Double check everything, then submit when ready.")
-    edit = st.checkbox("Let me edit the message")
-    if edit:
-        st.warning("Too bad, not going to happen.")
-        st.stop()
-    
-    friends = []
-    monies = []
-    messages = []
-    for person, data in request_dict.items():
-        friends.append(person)
-        monies.append(data[0])
-        messages.append(data[1])
-        
-    confirm_df = pd.DataFrame({
-        'person':friends,
-        'amount':monies,
-        'message':messages
-    })
-    st.table(confirm_df.set_index('person'))
-    num_ppl = len(request_dict.keys())
-    progress = st.progress(0)
-    good = st.button('Request them!')
-    if good:
-        i = 0
-        for person in request_dict.keys():
-            my_id, venmo_id = get_secrets(person.lower(), us_pw, db_ip, port)
-            venmo.request(amount = request_dict[person][0], message = request_dict[person][1], target_user_id = venmo_id)
-            progress.progress((i+1/num_ppl))
-            i+=1/num_ppl
-        st.balloons()
-        st.success("Money requested!")
-            
