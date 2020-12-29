@@ -146,3 +146,59 @@ class dbTokenizer():
         token = df.loc[my_id,'token']
         return token
         
+def get_user_id(my_name, us_pw, db_ip, port):
+    '''
+    get user id from names
+    '''
+    import sqlalchemy as sq
+    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
+    cnx = engine.connect()
+    meta = sq.MetaData()
+    meta.reflect(engine)
+    users = meta.tables['users']   
+
+    name = my_name.lower()
+    query = sq.select([users.c.id]).where(users.c.name.contains(my_name))
+    resultset = cnx.execute(query).fetchall()
+    if not resultset:
+        query = sq.select([users.c.id]).where(users.c.nicknames.contains(my_name))
+        resultset = cnx.execute(query).fetchall()
+    if not resultset:
+        st.warning(f"User {my_name} not found.")
+        st.stop()
+    else:
+        if len(resultset)==1:
+            user_ids = resultset[0][0]
+        else:
+            st.warning("Multiple possible users found")
+    return user_ids
+
+def get_secrets(my_name, us_pw, db_ip, port):
+    '''
+    Get local_id and venmo_numid from local db
+    '''
+    import sqlalchemy as sq
+    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
+    cnx = engine.connect()
+    meta = sq.MetaData()
+    meta.reflect(engine)
+    temp = meta.tables['temp']
+    
+    name = my_name.lower()
+    query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.name.contains(name)) 
+    resultset = cnx.execute(query).fetchall()
+    if not resultset:
+        query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.nicknames.contains(name))
+        resultset = cnx.execute(query).fetchall()
+        
+    result_list = list(resultset[0])
+    if not resultset:
+        st.warning(f"User {my_name} not found.")
+        st.stop()
+    else:
+        if len(result_list)==2:
+            user_id = result_list[0]
+            venmo_id = result_list[1]
+        else:
+            st.warning("Multiple possible users found")
+    return user_id, venmo_id

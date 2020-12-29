@@ -192,7 +192,14 @@ def auto_input(gui):
             extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'bad')
         st.stop()
           
-    return receipt_input ,fees_input, tax_input, tip_input
+    return_me = {
+        'description':"",
+        'receipt_input':receipt_input,
+        'fees_input':fees_input,
+        'tax_input':tax_input,
+        'tip_input':tip_input
+    }
+    return return_me
 
 def extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'good'):
     '''

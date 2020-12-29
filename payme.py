@@ -51,31 +51,39 @@ def start(button=None):
     if 'beta' in select_input:
         from apps import beta_image_rec as ir
         gui = '(Beta)'
-        receipt_input ,fees_input, tax_input, tip_input = ir.auto_input(gui)
+        user_output = ir.auto_input(gui)
     elif 'alpha' in select_input:
         gui = '(Alpha)'
-        receipt_input, fees_input, tax_input, tip_input = mm.manual_input(gui, params)
+        user_output = mm.manual_input(gui, params)
     else:
         gui = ''
-        receipt_input, fees_input, tax_input, tip_input = mm.manual_input(gui, params)
+        user_output = mm.manual_input(gui, params)
             
-    total_input, data = calc.total_calculator(receipt_input, fees_input, tax_input, tip_input)
-        
+    total_input, data = calc.total_calculator(**user_output)
+    
+    # dictionary of kwargs for venmo_calc()
+    user_modified = {
+        'tax':user_output['tax_input'],
+        'tip':user_output['tip_input'],
+        'misc_fees':user_output['fees_input'],
+        'description':user_output['description'],
+        'total':total_input,
+        'my_dic':data        
+    }
     try:
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
         if "alpha" in select_input:
-            request_money, tip_perc, tax_perc, fee_part, messages = calc.venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input, clean=True)
+            calc_message = calc.venmo_calc(**user_modified, clean=True)
         else:
-            # if manual, then show the html table
-            request_money, tip_perc, tax_perc, fee_part, messages = calc.venmo_calc(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input, clean=False)
-            mm.html_table(messages, request_money)
+            # if manual or orc, then show the html table
+            calc_message = calc.venmo_calc(**user_modified, clean=False)
+            mm.html_table(calc_message["messages"], calc_message["request_money"])
     except ZeroDivisionError:
-        request_money = None
+        calc_message={'request_money':None}
    
-    if not request_money:
+    if not calc_message['request_money']:
         st.info("See the how to for more information!")
         st.stop()
-        
     # add parameters to url for easy sharing
     if st.button("Share the calculation"):
         from apps import alpha_clipboard as ac
@@ -84,12 +92,12 @@ def start(button=None):
     ###################
     # TESTING GROUNDS #
     ###################
-    if ('alpha' in select_input) and request_money:
+    if ('alpha' in select_input) and calc_message['request_money']:
         from apps import alpha_users
-        alpha_users.app(my_dic = request_money, total=total_input, 
-                        tax=tax_input, tip=tip_input, misc_fees=fees_input,
-                        messages = messages, db_info = db_info)
-        "_________________________"
+        st.write()
+        alpha_users.app(my_dic = calc_message['request_money'], total=total_input, 
+                        messages = calc_message['messages'],db_info=db_info)
+        st.write("_________________________")
 
 def app():
     '''
