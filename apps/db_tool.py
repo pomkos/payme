@@ -113,30 +113,75 @@ class saveInfo():
 class dbTokenizer():
     def __init__(self, us_pw, db_ip, port):
         '''
-        Initializes db for saving or loading encrypted venmo tokens.
+        Initializes db for saving or loading encrypted venmo tokens, retreiving user data.
         '''
         engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-        self.cnx = engine.connect()
         meta = sq.MetaData()
         meta.reflect(engine)
-
-        self.table = meta.tables['secret']
+        self.cnx = engine.connect()
+        self.meta = meta
         
-    def save_token(self, my_id, token):
+    def copy_names(self, my_id, username):
         '''
-        Saves the encrypted token to db.
+        Copies preapproved person's username and nicknames to the users table of db
         '''
         cnx = self.cnx
-        table = self.table
-        query = sq.insert(table)
-        value = {'id':my_id,'token':token}
-        cnx.execute(query, value)
+        meta = self.meta
+        preapp = meta.tables['preapproved']
+        users = meta.tables['users']
+        username = username.lower()
+        
+        query = sq.select([preapp.c.nicknames]).where((preapp.c.id==my_id))
+        resultset = cnx.execute(query).fetchall()
+        data = resultset[0]
+        
+        query = sq.insert(users)
+        value = {
+            'id':my_id,
+            'username':username,
+            'nicknames':data[0]
+        }
+        try:
+            ''
+            # COMMENTED OUT TO TEST save_token
+            cnx.execute(query,value)
+        except Exception as e:
+            if e.code == 'gkpj':
+                st.sidebar.error(f"{username} already taken, try again.")
+                st.stop()
+            else:
+                st.sidebar.error(f"Something bad happened while copying. Tell Pete about this error: {e.code}")
+                st.stop()
 
+    def save_token(self, my_id, token):
+        '''
+        Saves the encrypted token to the secret table of db.
+        '''
+        cnx = self.cnx
+        meta = self.meta
+        preapp = meta.tables['preapproved']
+        secret = meta.tables['secret']       
+        
+        # grab venmo_id
+        query = sq.select([preapp.c.venmo_numid]).where(preapp.c.id == my_id)
+        resultset = cnx.execute(query).fetchall()
+        query = sq.insert(secret)
+        value = {'id':my_id,'venmo_numid':int(resultset[0][0]),'access_token':str(token)}
+        try:
+            cnx.execute(query, value)
+        except Exception as e:
+            if e.code == 'gkpj':
+                st.sidebar.error("Whoops, you're already signed up!")
+                st.stop()
+            else:
+                st.sidebar.error(f"Something bad happened while saving. Tell Pete about this error: {e.code}")
+                st.stop()
+        
     def get_token(self,my_id):
         '''
         Gets encrypted token from db.
         '''
-        table = self.table
+        table = self.meta.tables['secret']
         cnx = self.cnx
         query = sq.select([table]).where(table.c.id==my_id)
         resultset = cnx.execute(query).fetchall()
@@ -145,60 +190,56 @@ class dbTokenizer():
         df = df.set_index('id')
         token = df.loc[my_id,'token']
         return token
+            
+    def get_user_id(self,my_name):
+        '''
+        Checks whether the user exists in a preapproved db. 
+        Returns user id from names
+        '''
+        meta = self.meta
+        cnx = self.cnx
+        users = meta.tables['users']   
+        name = my_name.lower()
         
-def get_user_id(my_name, us_pw, db_ip, port):
-    '''
-    get user id from names
-    '''
-    import sqlalchemy as sq
-    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-    cnx = engine.connect()
-    meta = sq.MetaData()
-    meta.reflect(engine)
-    users = meta.tables['users']   
-
-    name = my_name.lower()
-    query = sq.select([users.c.id]).where(users.c.name.contains(my_name))
-    resultset = cnx.execute(query).fetchall()
-    if not resultset:
+        # check for name in nickname column
         query = sq.select([users.c.id]).where(users.c.nicknames.contains(my_name))
         resultset = cnx.execute(query).fetchall()
-    if not resultset:
-        st.warning(f"User {my_name} not found.")
-        st.stop()
-    else:
-        if len(resultset)==1:
-            user_ids = resultset[0][0]
+        # if not there, report that the user was not found
+        if not resultset:
+            st.warning(f"User {my_name.title()} not found.")
+            st.stop()
+        # if there, get the userid or warn of multiple users
         else:
-            st.warning("Multiple possible users found")
-    return user_ids
+            if len(resultset)==1:
+                user_ids = resultset[0][0]
+            else:
+                st.warning("Multiple possible users found")
+        return user_ids
 
-def get_secrets(my_name, us_pw, db_ip, port):
-    '''
-    Get local_id and venmo_numid from local db
-    '''
-    import sqlalchemy as sq
-    engine = sq.create_engine(f"postgres://{us_pw}@{db_ip}:{port}/payme")
-    cnx = engine.connect()
-    meta = sq.MetaData()
-    meta.reflect(engine)
-    temp = meta.tables['temp']
-    
-    name = my_name.lower()
-    query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.name.contains(name)) 
-    resultset = cnx.execute(query).fetchall()
-    if not resultset:
-        query = sq.select([temp.c.id, temp.c.venmo_numid]).where(temp.c.nicknames.contains(name))
-        resultset = cnx.execute(query).fetchall()
+    def get_approved(self,verif_code):
+        '''
+        Finds preapproved users and gets their local_id from local db
         
-    result_list = list(resultset[0])
-    if not resultset:
-        st.warning(f"User {my_name} not found.")
-        st.stop()
-    else:
-        if len(result_list)==2:
-            user_id = result_list[0]
-            venmo_id = result_list[1]
+        return
+        ------
+        local_id: int
+        '''
+        meta = self.meta
+        cnx = self.cnx
+        
+        preapp = meta.tables['preapproved']
+
+        # search for requestee in the local db
+        query = sq.select([preapp.c.id]).where(preapp.c.invite_code == verif_code) 
+        resultset = cnx.execute(query).fetchall()
+        if not resultset:
+            st.sidebar.error(f"Wrong invite code. Try again or contact Pete!")
+            st.stop()
         else:
-            st.warning("Multiple possible users found")
-    return user_id, venmo_id
+            result_list = list(resultset[0])
+            if len(result_list)==1:
+                user_id = int(result_list[0])
+            else:
+                st.error("More than one user has the same invite code. Contact Pete!")
+        return user_id
+    

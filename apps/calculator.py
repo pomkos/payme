@@ -175,5 +175,6 @@ def total_calculator(description, receipt_input, fees_input, tax_input, tip_inpu
 
     precheck_sum = sum(data.values())
     total_value = round(precheck_sum+tax_input+tip_input+fees_input,2) # prefill the total
-    total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)       
+    total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
+    
     return total_input, data

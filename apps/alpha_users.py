@@ -13,11 +13,11 @@ def app(my_dic, total, messages, db_info):
     st.sidebar.warning("Contact Pete to opt in.")
     choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
     if choice == "Login":
-        token, name = get_access_token(us_pw, db_ip, port)
+        token, name = login_user(us_pw, db_ip, port)
         venmo = venmoThings(token)
         st.sidebar.success("Success! Access token found, decrypted, and verified with Venmo.")
     else:
-        create_token(us_pw, db_ip, port)
+        create_user(us_pw, db_ip, port)
         st.stop()
            
     neat_messages = paramtext_formatter(messages)
@@ -37,7 +37,7 @@ def app(my_dic, total, messages, db_info):
     if edit:
         st.warning("Too bad, not going to happen.")
         st.stop()
-    
+    # Show a table of people to request plus messages that will be sent
     friends = []
     monies = []
     messages = []
@@ -57,7 +57,9 @@ def app(my_dic, total, messages, db_info):
     good = st.button('Request them!')
     if good:
         i = 0
+        # Request the people!
         for person in request_dict.keys():
+            # Get local id and venmo id
             my_id, venmo_id = db_tool.get_secrets(person.lower(), us_pw, db_ip, port)
             venmo.request(amount = request_dict[person][0], message = request_dict[person][1], target_user_id = venmo_id)
             progress.progress((i+1/num_ppl))
@@ -121,10 +123,10 @@ def password_decrypt(token: bytes, password: str) -> bytes:
         st.sidebar.error("Incorrect password")
         st.stop()
 
-def create_token(us_pw, db_ip, port):
+def create_user(us_pw, db_ip, port):
     '''
     Streamlit frontend.
-    Uses the encrypt function create an encrypted token. Returns token + user submitted pw.
+    Uses the encrypt function to create an encrypted token. Returns token + user submitted pw.
     '''
     # Explain to user
     from apps import db_tool
@@ -134,38 +136,41 @@ def create_token(us_pw, db_ip, port):
         * Your __access token__ is saved in encrypted form with the use of your personalized encryption key. This app cannot access your token without the personalized password.
         * Since the password is never saved, it must be entered on each use.""")
         
-    user = st.sidebar.text_input("Who are you?")
-    pw = st.sidebar.text_input("Create a Password", type="password")
-    token = st.sidebar.text_input("Access Token", type="password")
+    # grab essential information
+    user = st.sidebar.text_input("Create a username*")
+    verif = st.sidebar.text_input("Enter invite code*", type="password")
+    if verif:
+        tokenizer = db_tool.dbTokenizer(us_pw, db_ip, port)
+        my_id = tokenizer.get_approved(verif)
+    pw = st.sidebar.text_input("Create a password*", type="password")
+    token = st.sidebar.text_input("Paste venmo access token*", type="password")
     st.sidebar.info(f"Get your access token by clicking [here]({access_code_link})")
     
     if st.sidebar.button('Submit'):
-        token_enc = password_encrypt(token.encode(), pw)
-        token = db_tool.dbTokenizer(us_pw, db_ip, port)
-        token.save_token(my_id, token_enc.decode())
+        # encrypt token
+        token_enc = password_encrypt(token.encode(), pw)       
+        tokenizer.copy_names(my_id, user)
+        tokenizer.save_token(my_id, token_enc.decode())
+        
         st.success("Submitted! Remember your password, because we won't.")
         st.info("Login to continue!")
         st.stop()
         # not returning anything to force user to login
 
-def get_access_token(us_pw, db_ip, port):
+def login_user(us_pw, db_ip, port):
     '''
     Prompts for info to initiate get_user_id and db_tokenizer functions
     Grabs access token of selected user from db
     '''
     from apps import db_tool
-    coln,colpw = st.beta_columns(2)
-    with coln:
-        name = st.sidebar.text_input("Enter name*")
-        name = name.lower()
-    with colpw:
-        pw = st.sidebar.text_input("Enter password*", type="password")
-        
-    if name and pw:
-        my_id = db_tool.get_user_id(name, us_pw, db_ip, port)
+    name = st.sidebar.text_input("Enter username*")
+    name = name.lower()
+    pw = st.sidebar.text_input("Enter password*", type="password")
     
+    if name and pw:   
         token = db_tool.dbTokenizer(us_pw, db_ip, port) # initialize db cnx
-        token = token.get_token(my_id) # get token using id
+        user_id = token.get_user_id(name)
+        token = token.get_token(user_id) # get token using id
         access_token = password_decrypt(token.encode(), pw).decode()
         return access_token, name
     else:
@@ -182,8 +187,15 @@ class venmoThings():
         '''
         Connects to venmo to request money.
         '''
-        self.venmo = Client(access_token)
-        self.txn = self.venmo.payment
+        try:
+            self.venmo = Client(access_token) # initialize venmo api
+        except Exception as e:
+            if '401' in e.msg:
+                st.error("The access token is incorrect or revoked. Please contact Peter.")
+                st.stop()
+            else:
+                st.write(vars(e))
+        self.txn = self.venmo.payment # initialize venmo payment api
         
     def search_for_user(self,user_str):
         '''
