@@ -13,23 +13,26 @@ def app(my_dic, total, messages, db_info):
     st.sidebar.warning("Contact Pete to opt in.")
     choice = st.sidebar.selectbox("Hello, please login!",["Login","Create token"])
     if choice == "Login":
-        token, name = login_user(us_pw, db_ip, port)
+        token, username, user_id = login_user(us_pw, db_ip, port)
         venmo = venmoThings(token)
         st.sidebar.success("Success! Access token found, decrypted, and verified with Venmo.")
     else:
         create_user(us_pw, db_ip, port)
         st.stop()
-           
+        
+    tokenizer = db_tool.dbTokenizer(us_pw, db_ip, port)
     neat_messages = paramtext_formatter(messages)
     request_dict = {}
     for person, to_request in my_dic.items():
-        if person.lower() == name.lower(): # this is the requester
+        finding = tokenizer.find_self(user_id, person)
+        if finding: # this is the requester
             my_total = to_request[0]
+            my_name = finding
         else:
             amount = to_request[0]
             message = neat_messages[person]
             request_dict[person] = (amount, message)
-    st.info(f"Hi {name.title()}, we can now auto request ${round(total-my_total,2)} from your friends. Your portion was ${my_total}.")
+    st.info(f"Hi {my_name}, we can now auto request ${round(total-my_total,2)} from your friends. Your portion was ${my_total}.")
     
     st.write("## Confirm Requests")
     st.write("Double check everything, then submit when ready.")
@@ -72,8 +75,7 @@ def app(my_dic, total, messages, db_info):
 ### Database Region ###
 #######################
 
-access_code_link = "https://api.venmo.com/v1/oauth/authorize?client_id=1112&scope=access_profile,make_payments&response_type=code"
-
+access_code_link = "https://api.venmo.com/v1/oauth/authorize?client_id=1&scope=access_profile,make_payments&response_type=code"
 
 #########################
 ### Encryption Region ###
@@ -163,16 +165,16 @@ def login_user(us_pw, db_ip, port):
     Grabs access token of selected user from db
     '''
     from apps import db_tool
-    name = st.sidebar.text_input("Enter username*")
-    name = name.lower()
+    username = st.sidebar.text_input("Enter username*")
+    username = username.lower()
     pw = st.sidebar.text_input("Enter password*", type="password")
     
-    if name and pw:   
+    if username and pw:   
         token = db_tool.dbTokenizer(us_pw, db_ip, port) # initialize db cnx
-        user_id = token.get_user_id(name)
+        user_id = token.get_user_id(username=username)
         token = token.get_token(user_id) # get token using id
         access_token = password_decrypt(token.encode(), pw).decode()
-        return access_token, name
+        return access_token, username, user_id
     else:
         st.stop()
 
