@@ -71,18 +71,21 @@ def copy_to_clipboard(text):
     import js2py
     import streamlit.components.v1 as components
            
-    input_ =f'''<div><input type="text" value="{text}" id="myInput"> 
-                <button onclick="myFunction()">Copy it all</button></div>'''
+    input_ =f'''<button onclick="myFunction()">Copy</button>
+                <div>
+                <textarea id="myInput" cols=28 style="position:absolute; left: -10000px;">{text}</textarea>
+                </div>
+             '''
     
     # f string so links can be added to textbox
-    my_html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
+    html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
                         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
                         crossorigin="anonymous"></script> 
                         {input_}
                     """
     
     # second part of html code, brackets wont allow it to be part of fstring
-    my_html_second = """
+    html_second = """
     <SCRIPT LANGUAGE="JavaScript">
     function myFunction(){
     var copyText = document.getElementById("myInput");
@@ -93,10 +96,11 @@ def copy_to_clipboard(text):
     </SCRIPT>
     """
     # add strings together to get full html code
-    my_html_all = my_html_first + my_html_second
+    html_all = html_first + html_second
     # pass it to components.html
-    html_code = components.html(my_html_all)
+    html_code = components.html(html_all)
     # add to page
+    
     html_code
     
 def html_table(link_output, request_money):
