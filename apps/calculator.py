@@ -119,7 +119,7 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
         statement = statement.replace(' ','%20') # replace spaces for url parameter
         message_output[key] = statement # stores message only, no venmo link
         
-        link = f"https://venmo.com/?txn={txn}&audience={audience}&recipients={key}&amount={amount}&note={statement}"
+        link = f"https://venmo.com/?txn={txn}&audience={audience}&recipients={key}&amount={amount[0]}&note={statement}"
         link_output[key] = link
 
     if clean_message:

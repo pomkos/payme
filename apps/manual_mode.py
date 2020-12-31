@@ -72,7 +72,7 @@ def copy_to_clipboard(text):
     import streamlit.components.v1 as components
            
     input_ =f'''<div><input type="text" value="{text}" id="myInput"> 
-                <button onclick="myFunction()">Copy url</button></div>'''
+                <button onclick="myFunction()">Copy it all</button></div>'''
     
     # f string so links can be added to textbox
     my_html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
@@ -97,7 +97,7 @@ def copy_to_clipboard(text):
     # pass it to components.html
     html_code = components.html(my_html_all)
     # add to page
-    return html_code
+    html_code
     
 def html_table(link_output, request_money):
     '''
@@ -114,6 +114,8 @@ def html_table(link_output, request_money):
     
     html_table_data = f'''<tbody>'''    
     venmo_logo = 'https://raw.githubusercontent.com/pomkos/payme/main/images/venmo_logo_blue.png'
+    
+    copy_me = ''
     for key in link_output.keys():
         # append each person's rows to html table 
         html_row = f'''
@@ -121,12 +123,13 @@ def html_table(link_output, request_money):
             <td class="tg-0pky">{key}<br></td>
             <td class="tg-0pky">${request_money[key][0]}</td>
             <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
-            <td class="tg-0pky">{copy_to_clipboard(text=link_output[key])}<br></td>
         </tr>'''
         html_table_data += html_row
-
-    html_table = html_table_header + html_table_data + html_table_end
-    
-    st.write(html_table, unsafe_allow_html=True)
-    st.write('')
+        
+        copy_str = f"""**{key}**: {link_output[key]} \n"""
+        copy_me += copy_str
+    html_table_all = html_table_header + html_table_data + html_table_end
+    st.info("Click `Venmo` to get redirected to the Venmo app, or copy everything and paste it into telegram for later.")
+    st.write(html_table_all, unsafe_allow_html=True)
+    copy_to_clipboard(copy_me)
     
