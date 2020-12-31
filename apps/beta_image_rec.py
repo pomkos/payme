@@ -43,7 +43,7 @@ def auto_input(gui):
     from PIL import Image
     import magic
     st.title(f'Venmo Requests Calculator {gui}')
-    st.write('Leave the typing, calculating, and requesting up to us!')
+    st.write("We scan your DoorDash receipt, you get prefilled venmo links. Simple!")
     my_receipt = st.file_uploader("Upload a screenshot or receipt",type=['png','jpg','jpeg','pdf'])
     if not my_receipt:
         st.info("Upload a screenshot of the full DoorDash receipt!")
@@ -87,8 +87,12 @@ def auto_input(gui):
     ###    
     # number of people
     parts = text_str[text_str.str.contains('participants')]
-    extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
-    extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
+    try:
+        extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
+        extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
+    except Exception as e:
+        st.error("Sorry, only DoorDash receipts are supported for now.")
+        st.stop()
     
     my_names = st.text_input("Write names below, separated by a comma. Ex: peter, Russell")
     if not my_names:
@@ -270,7 +274,7 @@ def extracted_col(extracted,all_money,not_people,receipt_input,names, status = '
             st.table(combed_df.set_index('category'))
         else:
             # catchall, because sometimes there are 4 people and lots of fees
-            st.write(not_people)
+            ""
     st.write("__Detected cost distribution:__")
     st.write(receipt_input.title())
 

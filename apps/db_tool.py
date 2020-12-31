@@ -166,7 +166,9 @@ class dbTokenizer():
         query = sq.select([preapp.c.venmo_numid]).where(preapp.c.id == my_id)
         resultset = cnx.execute(query).fetchall()
         query = sq.insert(secret)
-        value = {'id':my_id,'venmo_numid':int(resultset[0][0]),'access_token':str(token)}
+        value = {'id':my_id,
+                 'venmo_numid':int(resultset[0][0]),
+                 'access_token':str(token)}
         try:
             cnx.execute(query, value)
         except Exception as e:
@@ -183,30 +185,64 @@ class dbTokenizer():
         '''
         table = self.meta.tables['secret']
         cnx = self.cnx
-        query = sq.select([table]).where(table.c.id==my_id)
+        query = sq.select([table.c.access_token]).where(table.c.id==my_id)
         resultset = cnx.execute(query).fetchall()
-        df = pd.DataFrame(resultset)
-        df.columns = resultset[0].keys()
-        df = df.set_index('id')
-        token = df.loc[my_id,'token']
+        token = resultset[0][0]
         return token
-            
-    def get_user_id(self,my_name):
+    def get_user_name(self, username):
         '''
-        Checks whether the user exists in a preapproved db. 
-        Returns user id from names
+        Returns the first name of the user that logged in, for personalization
+        and eliminating self-charge purposes.
         '''
         meta = self.meta
         cnx = self.cnx
-        users = meta.tables['users']   
-        name = my_name.lower()
+        users = meta.tables['users']
+        query = sq.select([users.c.name]).where(users.c.username == username)
+        resultset = cnx.execute(query)
+        name = resultset[0][0]
+        return name
+    def find_self(self, my_id, their_name):
+        '''
+        Checks whether my_name is the name of the person currently logged in
+        '''
+        meta = self.meta
+        cnx = self.cnx
+        nicks = meta.tables['nicknames']
         
-        # check for name in nickname column
-        query = sq.select([users.c.id]).where(users.c.nicknames.contains(my_name))
+        user = their_name.lower()
+        query = sq.select([nicks.c.names, nicks.c.nicknames]).where(nicks.c.id == my_id)
+        resultset = cnx.execute(query).fetchall()
+        my_alias = pd.DataFrame(resultset)
+        my_nicks = my_alias[1]
+        
+        if my_nicks.str.contains(user).sum() > 0:
+            i_am = my_alias.iloc[0,0].title()
+            return i_am
+        else:
+            return
+    def get_user_id(self,my_name=None, username=None):
+        '''
+        Checks whether the user exists in a preapproved db. 
+        Returns user id from names or usernames
+        '''
+        meta = self.meta
+        cnx = self.cnx
+        users = meta.tables['users']
+        
+        if my_name:
+            name = my_name.lower()
+            # check for name in nickname column
+            query = sq.select([users.c.id]).where(users.c.nicknames.contains(name))
+            
+        if username:
+            # check for matching username in username column
+            name = username.lower()
+            query = sq.select([users.c.id]).where(users.c.username == name)
+            
         resultset = cnx.execute(query).fetchall()
         # if not there, report that the user was not found
         if not resultset:
-            st.warning(f"User {my_name.title()} not found.")
+            st.warning(f"User {name.title()} not found.")
             st.stop()
         # if there, get the userid or warn of multiple users
         else:
@@ -215,7 +251,7 @@ class dbTokenizer():
             else:
                 st.warning("Multiple possible users found")
         return user_ids
-
+       
     def get_approved(self,verif_code):
         '''
         Finds preapproved users and gets their local_id from local db
