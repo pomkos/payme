@@ -44,11 +44,19 @@ def auto_input(gui):
     import magic
     st.title(f'Venmo Requests Calculator {gui}')
     st.write("We scan your DoorDash receipt, you get prefilled venmo links. Simple!")
+    with st.beta_expander("How To"):
+        st.warning("Make sure everything from 'Group Order' downwards is visible.")
+        st.write("""
+        1. Take a screenshot of the venmo receipt, like the sample shown below.
+        2. Save the screenshot to your desktop, then drag and drop.
+        3. Enter names as they appear on the receipt.
+        4. Done!
+        """)
+        st.image('images/sample_receipt.jpg',caption='Sample receipt',width=150)
+        st.info("To see your image and our extraction, click OCR feedback")
     my_receipt = st.file_uploader("Upload a screenshot or receipt",type=['png','jpg','jpeg','pdf'])
     if not my_receipt:
         st.info("Upload a screenshot of the full DoorDash receipt!")
-        st.info("Make sure everything from 'Group Order' downwards is visible.")
-        st.image('images/sample_receipt.jpg',caption='Sample receipt',width=150)
         st.stop()
     file_type = magic.from_buffer(my_receipt.read(2048)) # get the file type
 
