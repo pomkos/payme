@@ -92,6 +92,36 @@ def copy_to_clipboard(text=''):
     st.write(html_code, unsafe_allow_html=True )
     copy_button.js_on_event("button_click")
     
+def copy_to_clipboard2(text=''):
+    import streamlit as st
+    from bokeh.models.widgets import Button
+    from bokeh.models import CustomJS
+    from streamlit_bokeh_events import streamlit_bokeh_events
+    from io import StringIO
+    import pandas as pd
+    import js2py
+    import streamlit.components.v1 as components
+    #from html.parser import HTMLParser
+    #from html.entities import name2codepoint
+       
+     
+    html_code=components.html(f"""<input type="text" value="{text.replace(" ", "%20")}" id="myInput">
+                                  <button onclick="myFunction()">Copy text</button>""")
+    
+    st.write(html_code, unsafe_allow_html=True )
+    copy_button= Button(label="Copy All of Me")  
+    copy_button.js_on_event("button_click", CustomJS(code="""myFunction()=>{
+   
+    var copyText = document.getElementById("myInput");
+
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); 
+  
+    document.execCommand("copy");
+
+    alert("Copied the text: " + copyText.value);
+                        }"""))
+    
     
 def tg_formatter(link_output):
     '''
