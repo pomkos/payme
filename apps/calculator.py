@@ -98,7 +98,6 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
     '''
     link_output = {}
     message_output = {}
-    from urllib.parse import urlencode
     for key in request.keys():
         txn = 'charge' # charge or pay
         audience = 'private' # private, friends, or public

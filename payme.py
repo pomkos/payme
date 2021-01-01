@@ -71,6 +71,10 @@ def start(button=None):
         'my_dic':data        
     }
     try:
+        submit = st.button("Submit")
+        if not submit:
+            st.info("See the how to for more information!")
+            st.stop()
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
         if "alpha" in select_input:
             calc_message = calc.venmo_calc(**user_modified, clean=True)
@@ -78,12 +82,9 @@ def start(button=None):
             # if manual or orc, then show the html table
             calc_message = calc.venmo_calc(**user_modified, clean=False)
             mm.html_table(calc_message["messages"], calc_message["request_money"])
+
     except ZeroDivisionError:
         calc_message={'request_money':None}
-   
-    if not calc_message['request_money']:
-        st.info("See the how to for more information!")
-        st.stop()
     # add parameters to url for easy sharing
     if st.button("Share the calculation"):
         st.warning("Not yet implemented")
