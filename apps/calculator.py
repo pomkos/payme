@@ -65,8 +65,8 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
         ### Explain the calculation for transparency ###
         with st.beta_expander(label='What just happened?'):
             st.write(f"""
-            1. Tax% ($p_x$) was calculated using tax/(food_total): __{round(tax_perc*100,2)}%__
-            2. Tip% ($p_p$) was calculated using tip/(food_total): __{round(tip_perc*100,2)}%__
+            1. Tax% ($p_x$) was calculated using {tax}/({total}-{tip}-{tax}-{misc_fees}): __{round(tax_perc*100,2)}%__
+            2. Tip% ($p_p$) was calculated using {tip}/({total}-{tip}-{tax}-{misc_fees}): __{round(tip_perc*100,2)}%__
             3. Fees were distributed equally: __${fee_part}__ per person
             4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f$
                 * $m_t$ = total money to request
@@ -98,6 +98,7 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
     '''
     link_output = {}
     message_output = {}
+    from urllib.parse import urlencode
     for key in request.keys():
         txn = 'charge' # charge or pay
         audience = 'private' # private, friends, or public
@@ -119,7 +120,8 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
         statement = statement.replace(' ','%20') # replace spaces for url parameter
         message_output[key] = statement # stores message only, no venmo link
         
-        link = f"https://venmo.com/?txn={txn}&audience={audience}&recipients={key}&amount={amount[0]}&note={statement}"
+        # "&not" gets converted to a weird notation, not interpreted by ios. Use "&amp;" to escape the ampersand
+        link = f"https://venmo.com/?txn={txn}&amp;audience={audience}&amp;recipients={key}&amp;amount={amount[0]}&amp;note={statement}"
         link_output[key] = link
 
     if clean_message:

@@ -70,12 +70,18 @@ def copy_to_clipboard(text):
     import pandas as pd
     import js2py
     import streamlit.components.v1 as components
-           
-    input_ =f'''<button onclick="myFunction()">Copy</button>
-                <div>
-                <textarea id="myInput" cols=28 style="position:absolute; left: -10000px;">{text}</textarea>
-                </div>
-             '''
+    
+    # button styling, function. Textarea content, location.
+    input_ =f'''<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    
+    <button class="btn btn-outline-info" onclick="myFunction()">Copy</button>
+    
+    <div>
+    <textarea id="myInput" cols=28 style="position:absolute; left: -10000px;">{text}</textarea>
+    </div>
+    '''
     
     # f string so links can be added to textbox
     html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
@@ -98,10 +104,16 @@ def copy_to_clipboard(text):
     # add strings together to get full html code
     html_all = html_first + html_second
     # pass it to components.html
-    html_code = components.html(html_all)
+    html_code = components.html(html_all, height=50)
     # add to page
     
     html_code
+    
+def replace_recip(my_string,venmo_user):
+    "Replaces recipient with the given venmo username"
+    import re
+    new_string = re.sub("recipients=([A-Z])\w+&",f"recipients={venmo_user}&",my_string)
+    return new_string
     
 def html_table(link_output, request_money):
     '''
@@ -109,6 +121,9 @@ def html_table(link_output, request_money):
     ASCII table source: http://www.asciitable.com/
     Use Hx column, add a % before it
     '''
+    
+    link_type = st.selectbox("Request payments yourself, or send payme links to your friends", options=['Request them', 'Pay me'])
+    
     html_table_header = '''
     <table class="tg">
     '''
@@ -133,7 +148,21 @@ def html_table(link_output, request_money):
         copy_str = f"""**{key}**: {link_output[key]} \n"""
         copy_me += copy_str
     html_table_all = html_table_header + html_table_data + html_table_end
-    st.info("Click `Venmo` to get redirected to the Venmo app, or copy everything and paste it into telegram for later.")
-    st.write(html_table_all, unsafe_allow_html=True)
-    copy_to_clipboard(copy_me)
     
+    # get the request links
+    if "request" in link_type.lower():
+        st.write(html_table_all, unsafe_allow_html=True)
+        copy_to_clipboard(copy_me) # copy button
+    # get the pay links
+    else:
+        v_user = st.text_input("Your venmo username")
+        if v_user:
+            html_table_all = html_table_all.replace("charge","pay")
+            html_table_all = replace_recip(html_table_all,v_user)
+            
+            copy_me = copy_me.replace("charge","pay")
+            copy_me = replace_recip(copy_me,v_user)
+            
+            st.write(html_table_all, unsafe_allow_html=True)
+            copy_to_clipboard(copy_me) # copy button
+
