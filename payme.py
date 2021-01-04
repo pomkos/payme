@@ -11,7 +11,7 @@ import sys
 # files
 from apps import calculator as calc
 from apps import manual_mode as mm
-
+from apps import alpha_clipboard as alc
 # arguments
 us_pw = sys.argv[1]  # user input: "my_user:password"
 db_ip = sys.argv[2]  # user input: 192.168.1.11
@@ -78,17 +78,17 @@ def start(button=None):
             # if manual or orc, then show the html table
             calc_message = calc.venmo_calc(**user_modified, clean=False)
             mm.html_table(calc_message["messages"], calc_message["request_money"])
-
     except ZeroDivisionError:
-        st.info("See the how to for more information!")
         calc_message={'request_money':None}
+   
+    if not calc_message['request_money']:
+        st.info("See the how to for more information!")
         st.stop()
     # add parameters to url for easy sharing
     if st.button("Share the calculation"):
-#         st.warning("Not yet implemented")
-#         st.stop()
-        from apps import alpha_clipboard as ac
-        ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
+      
+        from apps import alpha_clipboard as alc
+        alc.set_params(my_dic= data, total=total_input, tax= user_output['tax_input'], tip= user_output['tip_input'], misc_fees=user_output['fees_input'],view=select_input ,share=True,)
         
     ###################
     # TESTING GROUNDS #

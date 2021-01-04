@@ -74,9 +74,15 @@ def copy_to_clipboard(text=''):
     html_code =components.html(
         """
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="shortcut icon" href="./favicon.png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <div><input type="text" value=" " id="myInput">
-    <button type="button" class="btn btn-outline-danger btn-sm margin:20px" onclick="myFunction()">Copy text</button></div>
+    <section>
+    <div class="border border-success rounded">
+    <textarea  id="myInput" class="form-control" rows="3"> </textarea></div>
+   <div> <button type="button" class="btn-copy-code btn btn-outline-danger btn-block waves-effect" onclick="myFunction()" style="margin-top:5px"><i class="fa fa-copy mr-1"></i>Copy me</button></div>
+   <div class="toolbar-item"><a class="btn btn-outline-grey btn-sm px-2 waves-effect export-to-snippet"><i class="fas fa-image mr-1"></i> Open in MDB Editor</a></div>
+    </section>
     <SCRIPT LANGUAGE="JavaScript">
     function myFunction()
     {
@@ -113,10 +119,12 @@ def copy_to_clipboard2(text=''):
     copy_button.js_on_event("button_click", CustomJS(code="""myFunction()=>{
    
     var copyText = document.getElementById("myInput");
+
     copyText.select();
     copyText.setSelectionRange(0, 99999); 
   
     document.execCommand("copy");
+
     alert("Copied the text: " + copyText.value);
                         }"""))
     
