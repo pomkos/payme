@@ -153,9 +153,9 @@ class dbTokenizer():
                 st.sidebar.error(f"Something bad happened while copying. Tell Pete about this error: {e.code}")
                 st.stop()
 
-    def save_token(self, my_id, token):
+    def save_token(self, my_id, token, device_id):
         '''
-        Saves the encrypted token to the secret table of db.
+        Saves the encrypted token and device_id to the secret table of db.
         '''
         cnx = self.cnx
         meta = self.meta
@@ -168,7 +168,9 @@ class dbTokenizer():
         query = sq.insert(secret)
         value = {'id':my_id,
                  'venmo_numid':int(resultset[0][0]),
-                 'access_token':str(token)}
+                 'access_token':str(token),
+                 'device_id':str(device_id)
+                }
         try:
             cnx.execute(query, value)
         except Exception as e:

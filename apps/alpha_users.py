@@ -75,7 +75,7 @@ def app(my_dic, total, messages, db_info):
 ### Database Region ###
 #######################
 
-access_code_link = "https://api.venmo.com/v1/oauth/authorize?client_id=1&scope=access_profile,make_payments&response_type=code"
+# access_code_link = "https://api.venmo.com/v1/oauth/authorize?client_id=1&scope=access_profile,make_payments&response_type=code"
 
 #########################
 ### Encryption Region ###
@@ -125,6 +125,27 @@ def password_decrypt(token: bytes, password: str) -> bytes:
         st.sidebar.error("Incorrect password")
         st.stop()
 
+        
+from contextlib import contextmanager, redirect_stdout
+from io import StringIO
+from time import sleep
+
+@contextmanager
+def st_capture(output_func):
+    '''
+    Captures printout statements, pushes them to streamlit frontend. 
+    '''
+    with StringIO() as stdout, redirect_stdout(stdout):
+        old_write = stdout.write
+
+        def new_write(string):
+            ret = old_write(string)
+            output_func(stdout.getvalue())
+            return ret
+        
+        stdout.write = new_write
+        yield
+        
 def create_user(us_pw, db_ip, port):
     '''
     Streamlit frontend.
@@ -145,16 +166,46 @@ def create_user(us_pw, db_ip, port):
         tokenizer = db_tool.dbTokenizer(us_pw, db_ip, port)
         my_id = tokenizer.get_approved(verif)
     pw = st.sidebar.text_input("Create a password*", type="password")
-    token = st.sidebar.text_input("Paste venmo access token*", type="password")
-    st.sidebar.info(f"Get your access token by clicking [here]({access_code_link})")
     
+    #### This is fishy af, removed ####
+    # token = st.sidebar.text_input("Paste venmo access token*", type="password")
+    # st.sidebar.info(f"Get your access token by clicking [here]({access_code_link})")
+    
+    venmo_user = st.sidebar.text_input("Enter venmo username, phone number, or email")
+    venmo_pw = st.sidebar.text_input("Enter venmo password", type = "password")
+    
+    output = st.empty()
+    
+    with st_capture(output.code):
+        if venmo_user and venmo_pw:
+            # NOTE: /.conda/envs/testing/lib/python3.8/site-packages/venmo_api/apis/auth_api.py 
+            # was modified in very last function. input ---> st.sidebar.text_input
+            access_code = Client.get_access_token(username=venmo_user, password=venmo_pw) # get user id from user/pw
+            st.info("""To logout from Venmo, click logout in the sidebar. \n
+Your access token will be stored encrypted. The only way to decrypt it is with your payme password, which is not stored.""")
+
+            ids_output = st.sidebar.text_area("Paste the `device-id` line here")
+            if ids_output: # get device-id to avoid 2fs next time
+                import re
+                try:
+                    device_id = re.findall("device-id: *(\S+?)[ \n]",ids_output)
+                    st.write(device_id)
+                except:
+                    st.warning("Is this the right line?")
+                    st.write(f"`{device_id}`")
+                    st.stop()
+                
     if st.sidebar.button('Submit'):
         # encrypt token
-        token_enc = password_encrypt(token.encode(), pw)       
+        token_enc = password_encrypt(access_code.encode(), pw)
+        device_id_enc = password_encrypt(device_id.encode(), pw)
+                
         tokenizer.copy_names(my_id, user)
-        tokenizer.save_token(my_id, token_enc.decode())
+        tokenizer.save_token(my_id, token_enc.decode(), device_id_enc.decode())
+
         
-        st.success("Submitted! Remember your password, because we won't.")
+        st.success("Submitted! Remember your payme password, because we won't.")
+        st.info("Your Venmo user/password was not stored, however an access code was stored.")
         st.info("Login to continue!")
         st.stop()
         # not returning anything to force user to login
@@ -185,10 +236,11 @@ from venmo_api import Client
 import venmo_api
 
 class venmoThings():
-    def __init__(self, access_token):
+    def __init__(self, vuser,vpass):
         '''
         Connects to venmo to request money.
         '''
+        access_token = Client.get_access_token(username=vuser, password=vpass)
         try:
             self.venmo = Client(access_token) # initialize venmo api
         except Exception as e:
@@ -220,7 +272,7 @@ class venmoThings():
                     pass
         else:
             return "No match found"
-        
+
     def request(self, amount, message, target_user_id):
         '''
         Request user some amount
