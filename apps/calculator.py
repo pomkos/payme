@@ -98,6 +98,7 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
     '''
     link_output = {}
     message_output = {}
+    import urllib.parse
     for key in request.keys():
         txn = 'charge' # charge or pay
         audience = 'private' # private, friends, or public
@@ -109,13 +110,13 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
         if tip > 0.0:
-            statement += f', tip was {round(tip_perc*100,2)}%25'
+            statement += f', tip was {round(tip_perc*100,2)}{urllib.parse.quote("﹪")}'
         if tax > 0.0:
-            statement += f', tax was {round(tax_perc*100,2)}%25'
+            statement += f', tax was {round(tax_perc*100,2)}{urllib.parse.quote("﹪")}'
         if misc_fees > 0.0:
             statement += f', fees were ${round(fee_part,2)}'
 
-        statement += '.%0AMade with %3C3 at payme.peti.work' # %0A creates a new line
+        statement += f'.%0AMade with {urllib.parse.quote("❤️")} at payme.peti.work' # %0A creates a new line
         statement = statement.replace(' ','%20') # replace spaces for url parameter
         message_output[key] = statement # stores message only, no venmo link
         
