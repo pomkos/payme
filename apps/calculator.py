@@ -106,7 +106,8 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
 
         # statement construction
         # ﹪ is required instead of % because of a bug in venmo note
-        statement = f'👋 Aloha {key}\nTotal '
+        statement = f'''👋 Aloha {key}
+        Total '''
         if description:
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
@@ -117,7 +118,9 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
         if misc_fees > 0.0:
             statement += f', fees were ${round(fee_part,2)}'
 
-        statement += f'.\n\nMade with ❤️ at payme.peti.work' # %0A creates a new line
+        statement += f'''.
+        
+        Made with ❤️ at payme.peti.work''' # %0A creates a new line
         statement = urllib.parse.quote(statement)
         message_output[key] = statement # stores message only, no venmo link
         
