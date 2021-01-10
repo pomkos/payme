@@ -1,17 +1,18 @@
 # User selects items in receipt, I parse it.
 
 from PIL import Image
+import cv2
 import streamlit as st
 import pandas as pd
 from streamlit_drawable_canvas import st_canvas
 
-st.beta_set_page_config(page_title="Receipt Parser")
+st.set_page_config(page_title="Receipt Parser")
 st.sidebar.title("Upload an Image")
 
 receipt_img = st.sidebar.file_uploader("",type=["png","jpg","jpeg"])
 
 # returns hex
-stroke_color = st.sidebar.beta_color_picker("Using one color for each person, select what they bought.") 
+stroke_color = st.sidebar.color_picker("Using one color for each person, select what they bought.") 
 st.sidebar.info("Click the down arrow when done.")
 
 
@@ -51,3 +52,8 @@ if receipt_img:
             'originY':'origin_y'},axis=1)
         relevant_df = relevant_df[relevant_df['height']!=0]
         st.table(relevant_df)
+    import pytesseract as tes
+    img_str = tes.image_to_string(Image.open(receipt_img))
+    jpg_original = base64.b64decode(img_str)
+    jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
+    img = cv2.imdecode(jpg_as_np, flags=1)
