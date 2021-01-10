@@ -106,7 +106,7 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
 
         # statement construction
         # ﹪ is required instead of % because of a bug in venmo note
-        statement = f'Waaasssuup {key}\nTotal '
+        statement = f'👋 Aloha {key}\nTotal '
         if description:
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
