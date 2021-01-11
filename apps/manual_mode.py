@@ -61,7 +61,6 @@ def manual_input(gui, params):
                      'fees_input':fees_input, 
                      'tax_input':tax_input,
                      'tip_input':tip_input}
-        st.write(return_me)
         return return_me
 
 def copy_to_clipboard(text):
