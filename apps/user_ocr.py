@@ -2,6 +2,8 @@
 
 from PIL import Image
 import cv2
+import numpy as np
+import pytesseract as tes
 import streamlit as st
 import pandas as pd
 from streamlit_drawable_canvas import st_canvas
@@ -11,10 +13,19 @@ st.sidebar.title("Upload an Image")
 
 receipt_img = st.sidebar.file_uploader("",type=["png","jpg","jpeg"])
 
-# returns hex
-stroke_color = st.sidebar.color_picker("Using one color for each person, select what they bought.") 
-st.sidebar.info("Click the down arrow when done.")
+if not receipt_img:
+    st.stop()
+    
+im1 = Image.open(receipt_img)
+width, height = im1.size
 
+# resize if too big
+if width >= 1000:
+    im = im1.resize((int(width*0.25),int(height*0.25)))
+elif (width < 1000) & (width > 700):
+    im = im1.resize((int(width*0.5),int(height*0.5)))
+else:
+    im = im1
 
 def get_rgb(hex_str, transparent = True):
     '''
@@ -29,8 +40,11 @@ def get_rgb(hex_str, transparent = True):
         
     return tuple(rgb_box) # return as tuple
 
-if receipt_img:
-    im = Image.open(receipt_img)
+def get_coords(im):
+    # returns hex
+    stroke_color = st.sidebar.color_picker("Using one color for each person, select what they bought. Use '#FF09E9' for totals, tips, fees") 
+    st.sidebar.info("Click the down arrow when done.")
+
     canvas_image = st_canvas(
         fill_color = f"rgba{get_rgb(stroke_color)}",
         stroke_width = 2, # width of drawing brush
@@ -42,7 +56,7 @@ if receipt_img:
         drawing_mode = "rect", # can be freedraw, line, rect, circle, transform
         key = "canvas", # optional str to use as unique key for widget
     )
-   
+
     if canvas_image.json_data is not None:
         #st.write(canvas_image.json_data)
         canvas_df = pd.json_normalize(canvas_image.json_data['objects'])
@@ -52,8 +66,39 @@ if receipt_img:
             'originY':'origin_y'},axis=1)
         relevant_df = relevant_df[relevant_df['height']!=0]
         st.table(relevant_df)
-    import pytesseract as tes
-    img_str = tes.image_to_string(Image.open(receipt_img))
-    jpg_original = base64.b64decode(img_str)
-    jpg_as_np = np.frombuffer(jpg_original, dtype=np.uint8)
-    img = cv2.imdecode(jpg_as_np, flags=1)
+        return relevant_df
+
+
+def app():
+    relevant_df = get_coords(im)
+
+            
+    # have opencv turn img to np array from uploadedfile type
+    img_array = np.array(im)
+    # crop image
+    all_prices = {}
+    for user in range(len(relevant_df)):
+        left = relevant_df.loc[user,'left']
+        top = relevant_df.loc[user,'top']
+        width = relevant_df.loc[user,'width']
+        height = relevant_df.loc[user,'height']
+
+        img_crp = img_array[top:top+height,left:left+width]
+        # return image to user
+        st.image(img_crp)
+        # OCR image
+        text_str = tes.image_to_string(Image.fromarray(img_crp))
+        text_str = text_str.replace(' ','')
+        text_str = text_str.replace('\n','')
+        if text_str:
+            import re
+            extr_prices = re.findall("\$(\d+\.\d+)",text_str)
+            # turn to numeric
+            extr_prices = list(pd.to_numeric(extr_prices))
+            print(text_str)
+            all_prices[f'user_{user}'] = extr_prices
+        else:
+            all_prices[f'user_{user}'] = "Not found"
+    all_prices
+
+app()

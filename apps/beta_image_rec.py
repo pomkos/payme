@@ -41,7 +41,7 @@ def auto_input(gui):
     Main auto function, decides pdf vs image then organize extracted info
     '''
     from PIL import Image
-    import magic
+    import magic # to get file type
     st.title(f'Venmo Requests Calculator {gui}')
     st.write("We scan your DoorDash receipt, you get prefilled venmo links. Simple!")
     with st.beta_expander("How To"):
