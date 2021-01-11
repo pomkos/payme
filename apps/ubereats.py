@@ -1,10 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np # for nan
-import re
-
-st.set_page_config(page_title = "Uber Eats Parser")
-st.title("Uber Eats Parser")
 
 def extras_remover(my_dict, key, loc1):
     '''
@@ -51,11 +47,12 @@ def name_maker(my_names):
     my_names = my_names.split(',')
     # format input to remove space and make it all lowercase
     names = [n.lower().strip() for n in my_names]
+    only_names = names.copy()
     names += ['subtotal','promotion','service', 'delivery', 'tip']
     names = tuple(names)
     names_dict = {} # dictionary of names and their iloc in the series
     names_dict['total'] = 0 # total is always the first line
-    return names_dict, names
+    return names_dict, names, only_names
 
 def receipt_formatter(receipt, names_dict, names):
     '''
@@ -141,28 +138,77 @@ def sanity_check(names_prices):
         st.table(pd.DataFrame(names_prices).T)
         st.stop()
     else:
-        letsgo = st.button("Submit")
+        letsgo = True
+        return
         
     return letsgo
+
+def receipt_for_machine(my_dict, description, only_names):
+    '''
+    Formats a dictionary of prices to be compatible with the rest of the payme script
+    '''
+    fees_input = 0
+    tax_input = 0
+    tip_input = 0
+    receipt_input = ''
+    # divide promotion by the number of people
+    equal_promos = my_dict['promotion'][0]/len(only_names)
+
+    for name, values in my_dict.items():
+        if name not in only_names:
+            if (name == 'service') or (name == 'delivery'):
+                fees_input += values[0]
+            if name == 'tip':
+                tip_input += values[0]
+        else:
+            # account for promo in sum
+            fair_value = sum(values) + equal_promos
+            standardized = f"{name}: {fair_value}"
+            receipt_input += standardized
+    # Deduct the promotion from fees
+    return_me = {}
+    return_me['description'] = description
+    return_me['receipt_input'] = receipt_input
+    return_me['fees_input'] = fees_input
+    return_me["tax_input"] = tax_input # always 0 in mexico, VAT is included
+    return_me['tip_input'] = tip_input
+    
+    return return_me
+    
+
 
 def app():
     '''
     Main region of uber eats parser
     '''
+    with st.beta_expander("How To"):
+        st.write("""
+        1. Type in the restaurants name.
+        2. Copy and paste the entire contents of UberEats receipt from the *Total* at the top to final charge at the bottom.
+        3. Type in the names of everyone that appears on the receipt, separated by commas.
+        4. Confirm the total is correct.
+        """)
     ### GUI ###
+    description = st.text_input("(Optional) Description, like the restaurant name")
     receipt = st.text_area("Paste the entire receipt from UberEats below, including totals and fees")
     receipt = receipt.lower()
     receipt = receipt.replace(',','')
-    my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+    if receipt:
+        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+    if not receipt:
+        st.stop()
     if not my_names:
         st.stop()
         
-    # Get the names, add additional variables like total, tip, fees, etc
-    names_dict, names = name_maker(my_names)  
+    # Get the names, adds additional variables like total, tip, fees, etc
+    names_dict, names, only_names = name_maker(my_names)
     # Assign prices to each variable, eliminate extras
     names_prices = receipt_formatter(receipt, names_dict, names)
     # Confirm with user total is correct
     sane = sanity_check(names_prices)
     if sane == False:
         st.stop()
-    ######################  
+    # standardize output for rest of script    
+    return_me = receipt_for_machine(names_prices, description, only_names)
+    
+    return return_me

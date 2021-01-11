@@ -47,7 +47,7 @@ def start(button=None):
     params = None
     if type(button) == str:
         pass
-    select_input = st.sidebar.radio("Select input type", options=['Manual','Auto (alpha)','Image (beta)'],index=0)
+    select_input = st.sidebar.radio("Select input type", options=['DoorDash','UberEats','Auto Requester (alpha)','Image OCR (beta)'],index=0)
     if 'beta' in select_input:
         from apps import beta_image_rec as ir
         gui = '(Beta)'
@@ -55,9 +55,13 @@ def start(button=None):
     elif 'alpha' in select_input:
         gui = '(Alpha)'
         user_output = mm.manual_input(gui, params)
-    else:
-        gui = ''
+    elif 'doordash' in select_input.lower():
+        gui = 'DoorDash'
         user_output = mm.manual_input(gui, params)
+    else:
+        gui = 'UberEats'
+        user_output = mm.manual_input(gui, params)
+        st.info("Note: for calculation purposes, promotions are divided equally and subtracted from each total")
             
     total_input, data = calc.total_calculator(**user_output)
     
