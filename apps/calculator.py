@@ -6,6 +6,23 @@ import numpy as np
 import re
 import sys
 
+def currency_converter(my_dic, total, tax, tip, misc_fees):
+    '''
+    Converts from local currency to USD
+    '''
+    
+    usd_convert = 20.12 # 1usd is 20.12 peso as of Jan 10, 2020
+    for name, price in my_dic.items():
+        my_dic[name] = price/usd_convert
+    total = round(total/usd_convert,2)
+    tax = tax/usd_convert
+    tip = tip/usd_convert
+    misc_fees = misc_fees/usd_convert
+    
+    return my_dic, total, tax, tip, misc_fees
+
+    
+
 def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=False):
     """
     Returns lump sums to request using venmo
@@ -42,8 +59,15 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
             or a venmo link (user clicks it and opens the app, prefilled)
         -------------------
     """
-    precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees,2)
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
+    
+    ###### MXD to USD conversion ######
+    convert = st.checkbox("Convert MXD to USD") # ask if MXD or USD is required
+    if convert:
+        my_dic, total, tax, tip, misc_fees = currency_converter(my_dic, total, tax, tip, misc_fees)
+    ###################################
+    
+    precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees,2)
     if total != precheck_sum:
         return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
     else:
@@ -53,6 +77,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
         fee_part = round(misc_fees/num_ppl,2)
         request = {}
         rounded_sum = 0
+                
         for key in my_dic.keys():        
             my_total = my_dic[key]
 
@@ -63,8 +88,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
             rounded_sum += person_total
             request[key] = person_total
         ### Explain the calculation for transparency ###
-        with st.beta_expander(label='What just happened?'):
-            st.write(f"""
+        this_happened = f"""
             1. Tax% ($p_x$) was calculated using {tax}/({total}-{tip}-{tax}-{misc_fees}): __{round(tax_perc*100,2)}%__
             2. Tip% ($p_p$) was calculated using {tip}/({total}-{tip}-{tax}-{misc_fees}): __{round(tip_perc*100,2)}%__
             3. Fees were distributed equally: __${fee_part}__ per person
@@ -74,7 +98,12 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
                 * $p_x$ = percent tax
                 * $p_p$ = percent tip
                 * $d_f$ = dollars spent on fee
-            """)
+                
+            """
+        if convert:
+            this_happened += "5. All tax, tip, fees, totals were converted to USD. __1 USD = 20.12 MXD__"
+        with st.beta_expander(label='What just happened?'):
+            st.write(this_happened)
         rounded_sum = round(rounded_sum,2)
         ### Error catcher ###
         if (rounded_sum > total+0.1):

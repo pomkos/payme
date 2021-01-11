@@ -17,46 +17,52 @@ def manual_input(gui, params):
         fees_inputp=0.0
         tip_inputp=0.0
         sharep=False
-    st.title(f'Venmo Requests Calculator {gui}')
+    st.title(f'Venmo Requests Calculator: {gui} Edition')
     if gui.lower() == '(alpha)':
         st.write("Let us request your friends for you!")
     else:
         st.write("Give us some info, we'll give you a personalized link!")
-    with st.beta_expander(label='How To'):
-        st.write(f"""
-            1. Input the name and itemized money spent in a format of:
-                ```
-                Peter: 20.21,5.23, 3.21
-                Russell: 11.01, 15.89, 1.99
-                ```
-                Or on a single line:
-                ```
-                Peter 20.21 5.23 3.21 Russell 11.01 15.89 1.99
-                ```
-                Or with a split cost (Peter and Russell pay 8 each)
-                ```
-                Peter and Russell 16
-                Peter: 20.21, 5.23
-                Russell 11.01 15.89 1.99
-                ```
-            2. Input the rest of the fees or tips as needed""")
-    description = st.text_input(label="(Optional) Description, like the restaurant name", value=describep)
-    receipt_input = st.text_area(label="Add name and food prices*", value=datap)
-    col1, col2, col3 = st.beta_columns(3)
+        
+    if "uber" in gui.lower():
+        from apps import ubereats as ue
+        return ue.app()
+    else:
+        with st.beta_expander(label='How To'):
+            st.write(f"""
+                1. Input the name and itemized money spent in a format of:
+                    ```
+                    Peter: 20.21,5.23, 3.21
+                    Russell: 11.01, 15.89, 1.99
+                    ```
+                    Or on a single line:
+                    ```
+                    Peter 20.21 5.23 3.21 Russell 11.01 15.89 1.99
+                    ```
+                    Or with a split cost (Peter and Russell pay 8 each)
+                    ```
+                    Peter and Russell 16
+                    Peter: 20.21, 5.23
+                    Russell 11.01 15.89 1.99
+                    ```
+                2. Input the rest of the fees or tips as needed""")
+        description = st.text_input(label="(Optional) Description, like the restaurant name", value=describep)
+        receipt_input = st.text_area(label="Add name and food prices*", value=datap)
+        col1, col2, col3 = st.beta_columns(3)
 
-    with col1:
-        fees_input = st.number_input("Fees in dollars",step=1.0, value=fees_inputp)
-    with col2:
-        tax_input = st.number_input("Tax in dollars",step=1.0, value=tax_inputp)
-    with col3:
-        tip_input = st.number_input("Tip in dollars",step=5.0, value=tip_inputp)
+        with col1:
+            fees_input = st.number_input("Fees in dollars",step=1.0, value=fees_inputp)
+        with col2:
+            tax_input = st.number_input("Tax in dollars",step=1.0, value=tax_inputp)
+        with col3:
+            tip_input = st.number_input("Tip in dollars",step=5.0, value=tip_inputp)
 
-    return_me = {'description':description, 
-                 'receipt_input':receipt_input, 
-                 'fees_input':fees_input, 
-                 'tax_input':tax_input,
-                 'tip_input':tip_input}
-    return return_me
+        return_me = {'description':description, 
+                     'receipt_input':receipt_input, 
+                     'fees_input':fees_input, 
+                     'tax_input':tax_input,
+                     'tip_input':tip_input}
+        st.write(return_me)
+        return return_me
 
 def copy_to_clipboard(text):
     '''
@@ -121,7 +127,6 @@ def html_table(link_output, request_money):
     ASCII table source: http://www.asciitable.com/
     Use Hx column, add a % before it
     '''
-    
     link_type = st.selectbox("Request payments yourself, or send payme links to your friends", options=['Request them', 'Pay me'])
     
     html_table_header = '''
