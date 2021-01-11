@@ -87,8 +87,10 @@ def start(button=None):
         calc_message={'request_money':None}
         st.stop()
     # add parameters to url for easy sharing
-    if st.button("Share the calculation"):
-        st.warning("Not yet implemented")
+    if st.button("Ping Pete some love!"):
+        st.balloons()
+        st.success("Thanks for using payme! <3")
+        send_webhook() # notify Pete that someone used payme!
         st.stop()
         from apps import alpha_clipboard as ac
         ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
@@ -103,6 +105,23 @@ def start(button=None):
                         messages = calc_message['messages'],db_info=db_info)
         st.write("_________________________")
 
+def send_webhook():
+    '''
+    Sends a hook to zapier, which emails me.
+    '''
+    import json
+    import requests
+    from apps import secret
+    
+    webhook_url = secret.app()
+    response = requests.get(webhook_url)
+    
+    if response.status_code != 200:
+        raise ValueError(
+        'Request to zapier returned an error %s, the response is:\n%s'
+        % (response.status_code, response.text)
+    )
+        
 def app():
     '''
     Only purpose is to start the app from bash script. Own function so the rest of the functions can be organized in a logical way.
