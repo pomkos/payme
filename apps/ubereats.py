@@ -54,7 +54,7 @@ def name_maker(my_names):
     names_dict['total'] = 0 # total is always the first line
     return names_dict, names, only_names
 
-def receipt_formatter(receipt, names_dict, names):
+def receipt_formatter(receipt, names_dict, names, promo = True):
     '''
     Eliminates all the extra fluff, retaining just the names and appropriate prices
     '''
@@ -106,7 +106,9 @@ def receipt_formatter(receipt, names_dict, names):
         names_prices[name] = list(pd.to_numeric(my_data))
 
     # make promotion negative
-    names_prices['promotion'][0] = names_prices['promotion'][0] * -1
+    if promo:
+        names_prices['promotion'][0] = names_prices['promotion'][0] * -1
+        
     return names_prices
 
 def sanity_check(names_prices):
@@ -143,7 +145,7 @@ def sanity_check(names_prices):
         
     return letsgo
 
-def receipt_for_machine(my_dict, description, only_names):
+def receipt_for_machine(my_dict, description, only_names, promo=True):
     '''
     Formats a dictionary of prices to be compatible with the rest of the payme script
     '''
@@ -152,8 +154,11 @@ def receipt_for_machine(my_dict, description, only_names):
     tip_input = 0
     receipt_input = ''
     # divide promotion by the number of people
-    equal_promos = my_dict['promotion'][0]/len(only_names)
-
+    if promo:
+        equal_promos = my_dict['promotion'][0]/len(only_names)
+    else:
+        equal_promos = 0 # if no promos, add nothing
+        
     for name, values in my_dict.items():
         if name not in only_names:
             if (name == 'service') or (name == 'delivery'):
@@ -202,13 +207,19 @@ def app():
         
     # Get the names, adds additional variables like total, tip, fees, etc
     names_dict, names, only_names = name_maker(my_names)
+    if receipt.count("promotion") > 0: # check if any promotions were included
+        promo = True
+    else:
+        promo = False
+    
     # Assign prices to each variable, eliminate extras
-    names_prices = receipt_formatter(receipt, names_dict, names)
+    names_prices = receipt_formatter(receipt, names_dict, names, promo=promo)
     # Confirm with user total is correct
     sane = sanity_check(names_prices)
     if sane == False:
         st.stop()
+    if promo:
+        st.info("Note: for calculation purposes, promotions are divided equally and subtracted from each total")
     # standardize output for rest of script    
-    return_me = receipt_for_machine(names_prices, description, only_names)
-    
+    return_me = receipt_for_machine(names_prices, description, only_names, promo=promo)
     return return_me

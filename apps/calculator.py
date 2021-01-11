@@ -89,9 +89,9 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
             request[key] = person_total
         ### Explain the calculation for transparency ###
         this_happened = f"""
-            1. Tax% ($p_x$) was calculated using {tax}/({total}-{tip}-{tax}-{misc_fees}): __{round(tax_perc*100,2)}%__
-            2. Tip% ($p_p$) was calculated using {tip}/({total}-{tip}-{tax}-{misc_fees}): __{round(tip_perc*100,2)}%__
-            3. Fees were distributed equally: __${fee_part}__ per person
+            1. Tax% ($p_x$) was calculated using {round(tax,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}): __{round(tax_perc*100,2)}%__
+            2. Tip% ($p_p$) was calculated using {round(tip,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}): __{round(tip_perc*100,2)}%__
+            3. Fees were distributed equally: __${round(fee_part,2)}__ per person
             4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f$
                 * $m_t$ = total money to request
                 * $d_s$ = dollars spent on food

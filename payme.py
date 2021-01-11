@@ -61,7 +61,6 @@ def start(button=None):
     else:
         gui = 'UberEats'
         user_output = mm.manual_input(gui, params)
-        st.info("Note: for calculation purposes, promotions are divided equally and subtracted from each total")
             
     total_input, data = calc.total_calculator(**user_output)
     
