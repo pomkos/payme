@@ -68,6 +68,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
     
     ###### MXD to USD conversion ######
+    st.sidebar.write("_______")
     convert = st.sidebar.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees)
