@@ -23,9 +23,11 @@ def currency_converter(my_dic, total, tax, tip, misc_fees):
     tax = tax/usd_convert
     tip = tip/usd_convert
     misc_fees = misc_fees/usd_convert
-    
+    date = df['date_updated'][0].date()
     usd_convert_type = f'{round(usd_convert,2)} {symbol}'
-    return my_dic, total, tax, tip, misc_fees, usd_convert_type
+    convert_info = [usd_convert_type, date]
+    
+    return my_dic, total, tax, tip, misc_fees, convert_info
 
     
 
@@ -108,7 +110,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
                 
             """
         if convert:
-            this_happened += f"5. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert}__"
+            this_happened += f"5. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert[0]}__, the rate was last updated on {usd_convert[1]} using [RatesAPI](https://ratesapi.io/)"
         with st.beta_expander(label='What just happened?'):
             st.write(this_happened)
         rounded_sum = round(rounded_sum,2)
