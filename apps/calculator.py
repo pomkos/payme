@@ -14,7 +14,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees):
     c = db_tool.getCurrency()
     df = c.df
     options = df['country'].sort_values().reset_index(drop=True)
-    ctry = st.selectbox('Select country', options=options, index=17)
+    ctry = st.sidebar.selectbox('Select country', options=options, index=17)
     usd_convert = list(df[df['country']==ctry]['rate'])[0] # get rate from db
     symbol = list(df[df['country']==ctry]['code'])[0]
     for name, price in my_dic.items():
@@ -68,7 +68,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
     
     ###### MXD to USD conversion ######
-    convert = st.checkbox("Convert to USD") # ask if MXD or USD is required
+    convert = st.sidebar.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees)
     ###################################
