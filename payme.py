@@ -104,7 +104,7 @@ def start(button=None):
         alpha_users.app(my_dic = calc_message['request_money'], total=total_input, 
                         messages = calc_message['messages'],db_info=db_info)
         st.write("_________________________")
-
+    
 def send_webhook():
     '''
     Sends a hook to zapier, which emails me.

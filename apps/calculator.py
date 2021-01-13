@@ -10,8 +10,13 @@ def currency_converter(my_dic, total, tax, tip, misc_fees):
     '''
     Converts from local currency to USD
     '''
-    
-    usd_convert = 20.12 # 1usd is 20.12 peso as of Jan 10, 2020
+    from apps import db_tool
+    c = db_tool.getCurrency()
+    df = c.df
+    options = df['country'].sort_values().reset_index(drop=True)
+    ctry = st.selectbox('Select country', options=options, index=17)
+    usd_convert = list(df[df['country']==ctry]['rate'])[0] # get rate from db
+    symbol = list(df[df['country']==ctry]['code'])[0]
     for name, price in my_dic.items():
         my_dic[name] = price/usd_convert
     total = round(total/usd_convert,2)
@@ -19,7 +24,8 @@ def currency_converter(my_dic, total, tax, tip, misc_fees):
     tip = tip/usd_convert
     misc_fees = misc_fees/usd_convert
     
-    return my_dic, total, tax, tip, misc_fees
+    usd_convert_type = f'{round(usd_convert,2)} {symbol}'
+    return my_dic, total, tax, tip, misc_fees, usd_convert_type
 
     
 
@@ -62,9 +68,9 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
     
     ###### MXD to USD conversion ######
-    convert = st.checkbox("Convert MXD to USD") # ask if MXD or USD is required
+    convert = st.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
-        my_dic, total, tax, tip, misc_fees = currency_converter(my_dic, total, tax, tip, misc_fees)
+        my_dic, total, tax, tip, misc_fees, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees)
     ###################################
     
     precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees,2)
@@ -101,7 +107,7 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
                 
             """
         if convert:
-            this_happened += "5. All tax, tip, fees, totals were converted to USD. __1 USD = 20.12 MXD__"
+            this_happened += f"5. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert}__"
         with st.beta_expander(label='What just happened?'):
             st.write(this_happened)
         rounded_sum = round(rounded_sum,2)
