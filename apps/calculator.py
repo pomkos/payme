@@ -140,19 +140,23 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
         amount = request[key] # total requested dollars
 
         # statement construction
-        statement = f'Hi {key}! Food '
+        # ﹪ is required instead of % because of a bug in venmo note
+        statement = f'''👋 Aloha {key}
+        Total '''
         if description:
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
         if tip > 0.0:
-            statement += f', tip was {round(tip_perc*100,2)}{urllib.parse.quote("﹪")}'
+            statement += f', tip was {round(tip_perc*100,2)}﹪'
         if tax > 0.0:
-            statement += f', tax was {round(tax_perc*100,2)}{urllib.parse.quote("﹪")}'
+            statement += f', tax was {round(tax_perc*100,2)}﹪'
         if misc_fees > 0.0:
             statement += f', fees were ${round(fee_part,2)}'
 
-        statement += f'.%0AMade with {urllib.parse.quote("❤️")} at payme.peti.work' # %0A creates a new line
-        statement = statement.replace(' ','%20') # replace spaces for url parameter
+        statement += f'''.
+        
+        Made with ❤️ at payme.peti.work''' # %0A creates a new line
+        statement = urllib.parse.quote(statement)
         message_output[key] = statement # stores message only, no venmo link
         
         # "&not" gets converted to a weird notation, not interpreted by ios. Use "&amp;" to escape the ampersand
