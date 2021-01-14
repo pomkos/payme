@@ -141,13 +141,16 @@ def app():
     '''
     Main region of doordash parser
     '''
+    import base64
     with st.beta_expander("How To"):
-        st.write("""
-        1. Type in the restaurants name.
-        2. Copy and paste the entire contents of DoorDash receipt from *Order Details* at the top to the total at the bottom.
-        3. Type in the names of everyone that appears on the receipt, separated by commas.
-        4. Confirm the total is correct.
-        """)
+        col1,col2 = st.beta_columns(2)
+        with col1:
+            st.write("""
+            1. Copy and paste the entire contents of DoorDash receipt from *Order Details* at the top to the total at the bottom.
+            2. Follow the prompts
+            """)
+        with col2:
+            st.markdown("![DoorDash copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_dd.gif)")
     ### GUI ###
     description = st.text_input("(Optional) Description, like the restaurant name")
     receipt = st.text_area("Paste the entire receipt from D below, including totals and fees")
