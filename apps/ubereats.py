@@ -135,10 +135,16 @@ def sanity_check(names_prices):
             if len(v) > max_len:
                 max_len = len(v)
         for k,v in names_prices.items():
-                if len(v) < max_len:
+            for i in range(max_len): # repeat as long as the max_len is
+                if len(v) < max_len: # to append nan one at a time
                     v.append(np.nan) # to make all lists same size for df
-        st.table(pd.DataFrame(names_prices).T)
-        st.stop()
+        cols = []
+        for i in range(max_len): # give names to columns
+            cols.append(f'Item {i+1}')
+        food_feedback = pd.DataFrame(names_prices).T
+        food_feedback.columns = cols
+        st.table(food_feedback)
+        letsgo = False
     else:
         letsgo = True
         return
