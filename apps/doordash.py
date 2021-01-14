@@ -2,14 +2,24 @@ import streamlit as st
 import pandas as pd
 import numpy as np # for nan
 
-def name_maker(my_names):
+def name_maker(my_names, receipt):
     '''
     Formats user inputed names, and appends other info like total, subtotal, delivery fee, etc.
     '''
     my_names = my_names.split(',')
+    
+    import re
+    for m in re.finditer(r'(\d+) parti\w+', receipt):
+        start = m.start()
+        end = m.end()
+        num_ppl = int(receipt[start:end].split(' ')[0])
+
     # format input to remove space and make it all lowercase
     names = [n.lower().strip() for n in my_names]
     only_names = names.copy()
+    if num_ppl != len(only_names):
+        st.warning(f'You provided {len(only_names)} names but I found {num_ppl} participants. Try again.')
+        st.stop()
     names += ['subtotal','tax','delivery','service','tip','total']
     names = tuple(names)
     return names, only_names
@@ -164,7 +174,7 @@ def app():
         st.stop()
         
     # Get the names, adds additional variables like total, tip, fees, etc
-    names, only_names = name_maker(my_names)
+    names, only_names = name_maker(my_names, receipt)
     
     # Assign prices to each variable, eliminate extras
     names_prices = receipt_formatter(receipt, names)
