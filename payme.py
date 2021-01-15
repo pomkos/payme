@@ -47,19 +47,38 @@ def start(button=None):
     params = None
     if type(button) == str:
         pass
-    select_input = st.sidebar.radio("Select input type", options=['Manual','DoorDash','UberEats','Auto Requester (alpha)','Image OCR (beta)'],index=0)
-    if 'beta' in select_input:
+    services = ['DoorDash','UberEats','Other']
+    service_chosen= st.sidebar.radio("What service did you use?", options=services,index=0)
+    service_chosen = service_chosen.lower()
+    
+    options = ['Copy-Paste','Auto Request (Alpha)', 'Image Recognition (Beta)']
+    if 'door' in service_chosen:
+        website = ['DoorDash']
+        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
+        
+    elif 'uber' in service_chosen:
+        website = ['UberEats']
+        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
+        
+    elif 'other' in service_chosen:
+        select_input = 'Manual'
+    
+
+    select_input = select_input.lower()
+    
+    if 'copy' in select_input:
+        if 'door' in website:
+            gui = 'DoorDash'
+            user_output = mm.manual_input(gui, params)
+        else:
+            gui = 'UberEats'
+            user_output = mm.manual_input(gui, params)
+    elif 'beta' in select_input:
         from apps import beta_image_rec as ir
         gui = '(Beta)'
         user_output = ir.auto_input(gui)
     elif 'alpha' in select_input:
         gui = '(Alpha)'
-        user_output = mm.manual_input(gui, params)
-    elif 'doordash' in select_input.lower():
-        gui = 'DoorDash'
-        user_output = mm.manual_input(gui, params)
-    elif 'ubereats' in select_input.lower():
-        gui = 'UberEats'
         user_output = mm.manual_input(gui, params)
     else:
         gui = 'Manual'
