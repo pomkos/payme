@@ -53,11 +53,11 @@ def start(button=None):
     
     options = ['Copy-Paste','Auto Request (Alpha)', 'Image Recognition (Beta)']
     if 'door' in service_chosen:
-        website = ['DoorDash']
+        website = 'doordash'
         select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
         
     elif 'uber' in service_chosen:
-        website = ['UberEats']
+        website = 'ubereats'
         select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
         
     elif 'other' in service_chosen:
@@ -70,7 +70,7 @@ def start(button=None):
         if 'door' in website:
             gui = 'DoorDash'
             user_output = mm.manual_input(gui, params)
-        else:
+        elif 'uber' in website:
             gui = 'UberEats'
             user_output = mm.manual_input(gui, params)
     elif 'beta' in select_input:
