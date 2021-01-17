@@ -163,7 +163,7 @@ def app():
             st.markdown("![DoorDash copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_dd.gif)")
     ### GUI ###
     description = st.text_input("(Optional) Description, like the restaurant name")
-    receipt = st.text_area("Paste the entire receipt from D below, including totals and fees")
+    receipt = st.text_area("Paste the entire receipt from DoorDash below, including totals and fees")
     receipt = receipt.lower()
     # receipt = receipt.replace(',','')
     if receipt:
