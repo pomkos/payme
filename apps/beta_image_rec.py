@@ -14,14 +14,8 @@ def ocr_image(my_receipt='pdf'):
         text_str = tes.image_to_string('temp/page.jpg')
     else:
         text_str = tes.image_to_string(Image.open(my_receipt))
-    text_str = text_str.lower().split("\n")
-    text_str = pd.Series(text_str)
-
-    # get rid of empty rows
-    text_str = text_str.replace('',float('NaN'))
-    text_str = text_str.dropna().reset_index(drop=True)
     
-    return text_str
+    return text_str.lower()
 
 def ocr_pdf(my_receipt):
     '''
@@ -78,26 +72,16 @@ def auto_input(gui):
                     st.image(Image.open(my_receipt),width=250)
             except:
                 st.warning("Can't show image")
-    extracted = {} # dictionary of all extracted info
-    ###
-    # Extract all prices
-    ###
-    monies = text_str[text_str.str.contains("\$")]
-    try:
-        monies = monies.str.replace('$','').astype(float)
-    except:
-        st.info("Currently only supporting group DoorDash orders. Try manual input!")
-        st.stop()
-    extracted['monies'] = monies.reset_index(drop=True)
     
-    ### 
-    # Extract people
-    ###    
-    # number of people
-    parts = text_str[text_str.str.contains('participants')]
+    extracted = {}
+    #### Get names ###
+    import re
+
     try:
-        extracted['participants'] = int(list(parts.str.extract("(\d\d?) participants")[0])[0])
-        extracted['items'] = int(list(parts.str.extract("(\d\d?) items")[0])[0])
+        parts = re.findall(r'(\d\d?) participants',text_str)[0]
+        num_item = re.findall(r'(\d\d?) items', text_str)[0]
+        extracted['participants'] = int(parts)
+        extracted['items'] = int(num_item)
     except Exception as e:
         st.error("Sorry, only DoorDash receipts are supported for now.")
         st.stop()
@@ -107,110 +91,24 @@ def auto_input(gui):
         st.info(f"""Add all __{extracted['participants']} names__, separated by a comma, in the order that they appear on the receipt.""")
         st.info(f"Click 'OCR feedback' to see your uploaded image")
         st.stop()
-    my_names = my_names.split(',')
-    if len(my_names)!=extracted['participants']:
+    my_names_check = my_names.split(',')
+    if len(my_names_check)!=extracted['participants']:
         # if user didn't provide the right number of names, script won't work
-        st.warning(f"I detected __{extracted['participants']}__ people on this receipt, but you provided __{len(my_names)}__")
+        st.warning(f"I detected __{extracted['participants']}__ people on this receipt, but you provided __{len(my_names_check)}__ names")
         st.stop()
-    
-    # format input to remove space and make it all lowercase
-    names = [n.lower().strip() for n in my_names]
-    names.append('subtotal')
-    names = tuple(names)
-    names_dict = {} # dictionary of names and their iloc in the series
-    for i, s in text_str.iteritems():
-        for name in names:
-            if s.startswith(name):
-                names_dict[name] = i
-    # number of items per person
-    for i in range(len(names)):
-        # find how many food items each person ate
-        try:
-            start = names_dict[names[i]]
-            end = names_dict[names[i+1]]
-            extracted[names[i]] = len(text_str[start+1:end])
-        except:
-            pass
-
-    ###
-    # Extract costs per person
-    ###
-    all_money = extracted['monies'] # each item is on its own line
-    people_money = all_money.loc[:extracted['items']-1] # the first X rows are all items, subtract one cuz ending is inclusive
-    my_receipt = {}
-    try:
-        for name in names[:len(names)-1]: # the last one is always subtotal
-            my_receipt[name] = people_money.loc[:extracted[name]-1]
-            for i in range(extracted[name]):
-                try:
-                    people_money = people_money.drop(i)
-                except:
-                    pass
-            people_money = people_money.reset_index(drop=True)
-    except:
-        st.warning("Are you sure the names were provided in the right order?")
-    receipt_input = ''
-    for name in my_receipt.keys():
-        receipt_input += f'{name}: {list(my_receipt[name])} '
-    receipt_input = receipt_input.replace('[','')
-    receipt_input = receipt_input.replace(']','')
-    ###
-    # Extract totals, fees, tips, taxes
-    ###
-    not_people = tuple(all_money.loc[extracted['items']:]) # since each item is on its own line, the number of items is a good cutoff
-     
-    if len(not_people) == 6: # delivery fee assumed to be included
-        subtotal = not_people[0]
-        tax_input = not_people[1]
-        fees_input = not_people[2]
-        fees_input += not_people[3]
-        tip_input = not_people[4]
-        total = not_people[5]
-        with col_extract:
-            st.success("Data extracted!")
-            extracted_col(extracted,all_money,not_people,receipt_input,names)  
-    elif len(not_people) == 5: # if there are only 5, then no delivery fee was included
-        subtotal = not_people[0]
-        tax_input = not_people[1]
-        fees_input = not_people[2]
-        tip_input = not_people[3]
-        total = not_people[4]
-        with col_extract:
-            st.success("Data extracted!")
-            extracted_col(extracted,all_money,not_people,receipt_input,names)       
-    elif len(not_people) == 3: # this was a pickup order, so no fees or tip
-        subtotal = not_people[0]
-        tax_input = not_people[1]
-        fees_input = 0
-        tip_input = 0
-        total = not_people[2]
-        with col_extract:
-            st.success("Data extracted!")
-            extracted_col(extracted,all_money,not_people,receipt_input,names) 
-    elif len(not_people) == 4: # subtotal not detected, no delivery fee
-        with col_extract:
-            st.warning("I don't think I found the subtotal")
-            extracted_col(extracted,all_money,not_people,receipt_input,names) 
-        subtotal = 0
-        tax_input = not_people[0]
-        fees_input = not_people[1]
-        tip_input = not_people[2]
-        total = not_people[3]
-    else:
-        import pandas as pd
-        st.warning(f"Expected 5 or 6 nonFood items, but found {len(not_people)}. Try manual input instead!")
-        with col_extract:
-            st.warning("Something went wrong. Did I OCR right?")
-            extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'bad')
+        
+    ### Parse info ###
+    # Get the names, adds additional variables like total, tip, fees, etc
+    from apps import doordash as dd
+    names, only_names = dd.name_maker(my_names, text_str)
+    # Assign prices to each variable, eliminate extras
+    names_prices = dd.receipt_formatter(text_str, names, only_names, ocr=True)
+    # Confirm with user total is correct
+    sane = dd.sanity_check(names_prices)
+    if sane == False:
         st.stop()
-          
-    return_me = {
-        'description':"",
-        'receipt_input':receipt_input,
-        'fees_input':fees_input,
-        'tax_input':tax_input,
-        'tip_input':tip_input
-    }
+    # standardize output for rest of script    
+    return_me = dd.receipt_for_machine(names_prices, description='', only_names = only_names)
     return return_me
 
 def extracted_col(extracted,all_money,not_people,receipt_input,names, status = 'good'):

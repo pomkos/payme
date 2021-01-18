@@ -59,11 +59,13 @@ def start(button=None):
     elif 'uber' in service_chosen:
         website = 'ubereats'
         select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
+        if ('beta' in select_input.lower()) or ('alpha' in select_input.lower()):
+            st.warning('Not yet implemented.')
+            st.stop()
         
     elif 'other' in service_chosen:
         select_input = 'Manual'
-    
-
+        
     select_input = select_input.lower()
     
     if 'copy' in select_input:

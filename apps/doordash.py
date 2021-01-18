@@ -24,12 +24,36 @@ def name_maker(my_names, receipt):
     names = tuple(names)
     return names, only_names
 
-def receipt_formatter(receipt, names):
+def ocr_parser(names_dict, names_str_items, only_names):
+    '''
+    Starts where receipt_formatter left off to make sense of ocr data
+    '''
+    import numpy as np
+
+    # Get number of items per person
+    num_items = {}
+    for person in names_dict.keys():
+        if person in only_names:
+            items = names_str_items[person].replace('',np.nan)
+            items = items.dropna()
+            num_items[person] = len(items[items.str.contains('\d\d?')]) # if a row contains a digit, that should be the number of meals bought
+        else: # its not a name, but fee or total
+            num_items[person] = 1
+    prices = names_str_items['total'].str.extract("\$(\d\d?\d?.+)")
+    prices = prices.dropna().reset_index(drop=True)
+    names_prices = {}
+    for person in names_dict.keys():
+        items = num_items[person]
+        names_prices[person] = list(pd.to_numeric(prices.loc[:items-1][0]))
+        prices = prices.loc[items:].reset_index(drop=True)
+    
+    return names_prices
+    
+def receipt_formatter(receipt, names, only_names, ocr=False):
     '''
     Eliminates all the extra fluff, retaining just the names and appropriate prices
     '''
     text_str = pd.Series(receipt.split('\n')) # split by new line
-
     # find where each name occurs to infer what belongs to them
     names_dict = {}
     for loc, string in text_str.iteritems():
@@ -50,8 +74,8 @@ def receipt_formatter(receipt, names):
             loc2 = names_dict[next_name] # loc of next name
         except:
             loc2 = len(keys) # this is total
-        names_range[name] = [loc1, loc2]
-    
+        names_range[name] = [loc1, loc2]   
+        
     # assign each line to a name
     names_str_items = {}
     for name, nums in names_range.items():
@@ -59,14 +83,16 @@ def receipt_formatter(receipt, names):
         if ('total' in name) and ('subtotal' not in name):
             names_str_items[name] = text_str.loc[nums[0]:] # previous formula wouldn't work for total, 
                                                            # since it SHOULD be the last in series
-    # extract only the prices from each line
-    names_prices = {}
-    for name, data in names_str_items.items():
-        my_data = data.str.extract('\$(\d+\.\d+)')
-        my_data = my_data.dropna()[0]
-        names_prices[name] = list(pd.to_numeric(my_data))
-        
-    return names_prices
+    if ocr:
+        names_prices = ocr_parser(names_dict, names_str_items,only_names)
+        return names_prices
+    else:    # extract only the prices from each line
+        names_prices = {}
+        for name, data in names_str_items.items():
+            my_data = data.str.extract('\$(\d+\.\d+)')
+            my_data = my_data.dropna()[0]
+            names_prices[name] = list(pd.to_numeric(my_data))
+        return names_prices
 
 def sanity_check(names_prices):
     '''
@@ -108,6 +134,7 @@ def sanity_check(names_prices):
         return
         
     return letsgo
+
 def receipt_for_machine(my_dict, description, only_names):
     '''
     Formats a dictionary of prices to be compatible with the rest of the payme script
@@ -134,7 +161,7 @@ def receipt_for_machine(my_dict, description, only_names):
                 st.stop()
             else:
                 # account for promo in sum
-                standardized = f"{name}: {sum(values)}"
+                standardized = f"{name}: {sum(values)} "
                 receipt_input += standardized
     return_me = {}   
     return_me['description'] = description
@@ -177,7 +204,7 @@ def app():
     names, only_names = name_maker(my_names, receipt)
     
     # Assign prices to each variable, eliminate extras
-    names_prices = receipt_formatter(receipt, names)
+    names_prices = receipt_formatter(receipt, names, only_names)
     # Confirm with user total is correct
     sane = sanity_check(names_prices)
     if sane == False:
