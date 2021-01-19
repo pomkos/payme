@@ -87,7 +87,6 @@ def start(button=None):
         user_output = mm.manual_input(gui, params)
             
     total_input, data = calc.total_calculator(**user_output)
-    
     # dictionary of kwargs for venmo_calc()
     user_modified = {
         'tax':user_output['tax_input'],
@@ -95,7 +94,8 @@ def start(button=None):
         'misc_fees':user_output['fees_input'],
         'description':user_output['description'],
         'total':total_input,
-        'my_dic':data        
+        'discount':user_output['discount'],
+        'my_dic':data
     }
     try:
         # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person

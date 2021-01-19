@@ -20,7 +20,7 @@ def name_maker(my_names, receipt):
     if num_ppl != len(only_names):
         st.warning(f'You provided {len(only_names)} names but I found {num_ppl} participants. Try again.')
         st.stop()
-    names += ['subtotal','tax','delivery','service','tip','total']
+    names += ['subtotal','tax','delivery','discount','service','tip','total']
     names = tuple(names)
     return names, only_names
 
@@ -92,6 +92,8 @@ def receipt_formatter(receipt, names, only_names, ocr=False):
             my_data = data.str.extract('\$(\d+\.\d+)')
             my_data = my_data.dropna()[0]
             names_prices[name] = list(pd.to_numeric(my_data))
+        if 'discount' in names_prices.keys(): # doesn't always appear on receipts
+            names_prices['discount'] = [names_prices['discount'][0] * -1] # multiply by -1 cuz discount
         return names_prices
 
 def sanity_check(names_prices):
@@ -163,7 +165,11 @@ def receipt_for_machine(my_dict, description, only_names):
                 # account for promo in sum
                 standardized = f"{name}: {sum(values)} "
                 receipt_input += standardized
-    return_me = {}   
+    return_me = {}
+    if 'discount' in my_dict.keys():
+        return_me['discount'] = my_dict['discount'][0]
+    else:
+        return_me['discount'] = 0
     return_me['description'] = description
     return_me['receipt_input'] = receipt_input
     return_me['fees_input'] = fees_input
@@ -209,6 +215,6 @@ def app():
     sane = sanity_check(names_prices)
     if sane == False:
         st.stop()
-    # standardize output for rest of script    
+    # standardize output for rest of script
     return_me = receipt_for_machine(names_prices, description, only_names)
     return return_me
