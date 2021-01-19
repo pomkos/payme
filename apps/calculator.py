@@ -74,8 +74,9 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
     if convert:
         my_dic, total, tax, tip, misc_fees, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees)
     ###################################
-    st.write(discount)
     precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees+discount,2)
+    st.write("discount", discount)
+    st.write("precheck_sum", precheck_sum)
     if total != precheck_sum:
         st.error(f"You provided {total} as the total, but I calculated {precheck_sum}")
         st.stop()
@@ -85,16 +86,26 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         tip_perc = tip/(total-tip-misc_fees-tax)
         fee_part = round(misc_fees/num_ppl,2)
         disc_part = round(discount/num_ppl,2)
+        st.write("disc_part", disc_part)
+        st.write("_______________")
         request = {}
         rounded_sum = 0
                 
-        for key in my_dic.keys():        
+        for key in my_dic.keys(): 
             my_total = my_dic[key]
+            st.write(key, "total is", my_total)
             tax_part = tax_perc * my_total
+            st.write("tax", tax_part)
             tip_part = tip_perc * my_total
+            st.write("tip", tip_part)
+            st.write("fee",fee_part)
+            st.write("disc_part", disc_part)
 
             person_total = my_total + tax_part + fee_part + tip_part + disc_part
+            st.write(key, "total with fees and discount is", person_total)
             rounded_sum += person_total
+            st.write("rounded_sum now is", rounded_sum)
+            st.write("_______________")
             request[key] = person_total
         ### Explain the calculation for transparency ###
         this_happened = f"""
