@@ -127,13 +127,27 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             request_money[key] = [round(request[key],2)]
         from apps import manual_mode as mm
         # get dictionary of name:message
-        messages = venmo_message_maker(description,request_money,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=clean)
+
+        # gather variables
+        for_messages = {
+            'description':description,
+            'request':request_money,
+            'my_dic':my_dic,
+            'tip_perc':tip_perc,
+            'tax_perc':tax_perc,
+            'fee_part':fee_part,
+            'misc_fees':misc_fees,
+            'disc_part':disc_part,
+            'clean_message':clean # not sure what this is...
+        }
+
+        messages = venmo_message_maker(**for_messages)
         
         data = {"request_money":request_money,
                 "messages":messages}       
         return data
     
-def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,tip,tax,misc_fees, clean_message=False):
+def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,misc_fees,disc_part, clean_message=False):
     '''
     Generates a message or link that directs user to venmo app with prefilled options
     '''
@@ -152,12 +166,14 @@ Your total '''
         if description:
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
-        if tip > 0.0:
+        if tip_perc > 0.0:
             statement += f', tip was {round(tip_perc*100,2)}﹪'
-        if tax > 0.0:
+        if tax_perc > 0.0:
             statement += f', tax was {round(tax_perc*100,2)}﹪'
         if misc_fees > 0.0:
             statement += f', fees were ${round(fee_part,2)}'
+        if abs(disc_part) > 0.0:
+            statement += f', your discount was ${round(disc_part,2)}'
 
         statement += f'''.
         
