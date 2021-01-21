@@ -31,7 +31,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees):
 
     
 
-def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=False):
+def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0, clean=False):
     """
     Returns lump sums to request using venmo
 
@@ -68,55 +68,58 @@ def venmo_calc(my_dic, total, description, tax=0, tip=0, misc_fees=0, clean=Fals
         -------------------
     """
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
-    
     ###### MXD to USD conversion ######
     st.sidebar.write("_______")
     convert = st.sidebar.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees)
     ###################################
-    
-    precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees,2)
+    precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees+discount,2)
     if total != precheck_sum:
-        return st.write(f"You provided {total} as the total, but I calculated {precheck_sum}")
+        st.error(f"You provided {total} as the total, but I calculated {precheck_sum}")
+        st.stop()
     else:
         num_ppl = len(my_dic.keys())
-        tax_perc = tax/(total-tip-misc_fees-tax)
-        tip_perc = tip/(total-tip-misc_fees-tax)
+        tax_perc = tax/(total-tip-misc_fees-tax-discount)
+        tip_perc = tip/(total-tip-misc_fees-tax-discount)
         fee_part = round(misc_fees/num_ppl,2)
+        disc_part = round(discount/num_ppl,2)
         request = {}
         rounded_sum = 0
                 
-        for key in my_dic.keys():        
+        for key in my_dic.keys(): 
             my_total = my_dic[key]
-
             tax_part = tax_perc * my_total
             tip_part = tip_perc * my_total
 
-            person_total = my_total + tax_part + fee_part + tip_part
+            person_total = my_total + tax_part + fee_part + tip_part + disc_part
             rounded_sum += person_total
             request[key] = person_total
         ### Explain the calculation for transparency ###
         this_happened = f"""
-            1. Tax% ($p_x$) was calculated using {round(tax,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}): __{round(tax_perc*100,2)}%__
-            2. Tip% ($p_p$) was calculated using {round(tip,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}): __{round(tip_perc*100,2)}%__
+            1. Tax% ($p_x$) was calculated using {round(tax,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tax_perc*100,2)}%__
+            2. Tip% ($p_p$) was calculated using {round(tip,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tip_perc*100,2)}%__
             3. Fees were distributed equally: __${round(fee_part,2)}__ per person
-            4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f$
+            4. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_p) + d_f - d_d$
                 * $m_t$ = total money to request
                 * $d_s$ = dollars spent on food
                 * $p_x$ = percent tax
                 * $p_p$ = percent tip
                 * $d_f$ = dollars spent on fee
+                * $d_d$ = discount, if any
                 
             """
         if convert:
             this_happened += f"5. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert[0]}__, the rate was last updated on {usd_convert[1]} using [RatesAPI](https://ratesapi.io/)"
+        if (discount != 0):
+            this_happened += f"6. The discount was distributed equally: deducted __${round(disc_part,2)}__ from each person"
         with st.beta_expander(label='What just happened?'):
             st.write(this_happened)
         rounded_sum = round(rounded_sum,2)
         ### Error catcher ###
         if (rounded_sum > total+0.1):
-            return st.write(f"Uh oh! My calculated venmo charge sum is ${rounded_sum} but the receipt total was ${round(total,2)}")
+            st.error(f"Uh oh! My calculated venmo charge sum is ${rounded_sum} but the receipt total was ${round(total,2)}, a difference of ${round(abs(rounded_sum-total),2)}")
+            st.stop()
 
         ### Round the calculated request amounts ###
         request_money = {}
@@ -144,8 +147,8 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
 
         # statement construction
         # ﹪ is required instead of % because of a bug in venmo note
-        statement = f'''👋 Aloha {key}
-        Total '''
+        statement = f'''👋 Aloha {key}!
+Your total '''
         if description:
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
@@ -158,7 +161,7 @@ def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,ti
 
         statement += f'''.
         
-        Made with ❤️ at payme.peti.work''' # %0A creates a new line
+Made with ❤️ at payme.peti.work''' # %0A creates a new line
         statement = urllib.parse.quote(statement)
         message_output[key] = statement # stores message only, no venmo link
         
@@ -198,7 +201,7 @@ class receiptFormat():
         'Splits "12.2 12.3 56 53.2" -> "[12.2,12.3,56,53.2]"'
         return list(filter(None, re.split('(?:[^\\d\\.])', numbers)))
 
-def total_calculator(description, receipt_input, fees_input, tax_input, tip_input):
+def total_calculator(description, receipt_input, fees_input, tax_input, tip_input, discount):
     """
     Calculates the total amount spent using all variables. Separated function so we can take account for params
     """
@@ -212,13 +215,12 @@ def total_calculator(description, receipt_input, fees_input, tax_input, tip_inpu
     data = {}
     for (people, amount) in raw_pairs:
         for person in [person.capitalize() for person in people]:
-            if not person in data:
+            if not person in data: # then its a fee or total
                 data[person] = round(amount/len(people),2)
             else:
                 data[person] += round(amount/len(people),2)
-
     precheck_sum = sum(data.values())
-    total_value = round(precheck_sum+tax_input+tip_input+fees_input,2) # prefill the total
+    total_value = round(precheck_sum+tax_input+tip_input+fees_input+discount,2) # prefill the total
     total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
     
     return total_input, data
