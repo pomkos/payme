@@ -57,7 +57,8 @@ def manual_mode():
             2. Input the rest of the fees or tips as needed""")
     description = st.text_input(label="(Optional) Description, like the restaurant name")
     receipt_input = st.text_area(label="Add name and food prices*")
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2 = st.beta_columns(2)
+    col3, col4 = st.beta_columns(2)
 
     with col1:
         fees_input = st.number_input("Fees in dollars",step=1.0)
@@ -65,12 +66,14 @@ def manual_mode():
         tax_input = st.number_input("Tax in dollars",step=1.0)
     with col3:
         tip_input = st.number_input("Tip in dollars",step=5.0)
-
+    with col4:
+        discount = st.number_input("Discount in dollars",step=1.0)
     return_me = {'description':description, 
                  'receipt_input':receipt_input, 
                  'fees_input':fees_input, 
                  'tax_input':tax_input,
-                 'tip_input':tip_input}
+                 'tip_input':tip_input,
+                 'discount':discount}
     return return_me
 
 def copy_to_clipboard(text):

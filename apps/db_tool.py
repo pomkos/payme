@@ -64,7 +64,7 @@ class getCurrency():
         '''
         import sqlalchemy as sq
         import pandas as pd
-        engine = sq.create_engine("postgres://postgres:helllo@192.168.1.240:5432/payme")
+        engine = sq.create_engine("sqlite:///data/currency.db")
         cnx = engine.connect()
         self.country_df = pd.read_sql('country_currency',cnx)
         meta = sq.MetaData()
@@ -96,7 +96,7 @@ class getCurrency():
         '''
         import sqlalchemy as sq
         import pandas as pd
-        engine = sq.create_engine("postgres://postgres:helllo@192.168.1.240:5432/payme")
+        engine = sq.create_engine("sqlite:///data/currency.db")
         cnx = engine.connect()
         
         self.df = pd.read_sql("currency_rates",cnx,parse_dates='date_updated')
@@ -112,7 +112,6 @@ class getCurrency():
         country_currency = country_currency.drop(0).reset_index(drop=True)
         country_currency = country_currency.drop('comment',axis=1)
         return country_currency
-
             
 class saveInfo():
     def __init__(self, my_total=0, my_food=0, tip_perc=0, tax_perc=0, fee_part=0,showme='yes'):
