@@ -68,6 +68,7 @@ def manual_mode():
         tip_input = st.number_input("Tip in dollars",step=5.0)
     with col4:
         discount = st.number_input("Discount in dollars",step=1.0)
+        discount = discount*-1
     return_me = {'description':description, 
                  'receipt_input':receipt_input, 
                  'fees_input':fees_input, 
