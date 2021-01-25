@@ -25,7 +25,6 @@ def manual_input(gui, params):
         
     if "uber" in gui.lower():
         from apps import ubereats as ue
-        st.write(ue.app())
         return ue.app()
     elif "door" in gui.lower():
         from apps import doordash as dd

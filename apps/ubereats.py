@@ -126,10 +126,6 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
         my_data = my_data.dropna()[0]
         names_prices[name] = list(pd.to_numeric(my_data))
     
-    # make promotion negative
-    if promo:
-        names_prices['promotion'][0] = names_prices['promotion'][0] * -1
-        
     return names_prices
 
 def sanity_check(names_prices):
@@ -196,14 +192,13 @@ def receipt_for_machine(my_dict, description, only_names, promo=True):
             fair_value = sum(values) + equal_promos
             standardized = f"{name}: {fair_value}"
             receipt_input += standardized
-    # Deduct the promotion from fees
     return_me = {}
+    return_me['discount'] = 0 # its called promotion, and already calculated into price
     return_me['description'] = description
     return_me['receipt_input'] = receipt_input
     return_me['fees_input'] = fees_input
     return_me["tax_input"] = tax_input # always 0 in mexico, VAT is included
     return_me['tip_input'] = tip_input
-    
     return return_me
     
 
