@@ -58,15 +58,29 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
     '''
     Eliminates all the extra fluff, retaining just the names and appropriate prices
     '''
+    names = list(names)
+    names.remove('tip')
+    names.append('contribution')
+    names.append('tip')
+    names = tuple(names)
+    receipt += '\n' # add at end so tip can be counted
     text_str = pd.Series(receipt.split('\n')) # split by new line
     # how many times does the word extras appear
     extras_num = receipt.count('extras')
-
+    name_counter = {} # to count the number of times something appears, it appears more than once then its a bug (tip appears in tip and tipo)
+    for name in names:
+        name_counter[name] = [0]
     # find where each name occurs to infer what belongs to them
     for loc, string in text_str.iteritems():
-        for name in names:
-            if name in string:
-                names_dict[name] = loc
+        for name in names: # for each name in the list
+            if (name in string) and ('tipo' not in string): # name is in the string
+                names_dict[name] = loc # assign location in dictionary
+                name_counter[name][0] += 1 # increment counter
+                name_counter[name].append(loc) # assign all locs
+    for k, v in name_counter.items():
+        if v[0] > 1: 
+            st.warning(f"It looks like {k} appears more than once in the receipt, at lines {name_counter[name][1:]}. Please find the correct {k} and rename the others. Then tell Pete!")
+            st.stop()
     keys = list(names_dict.keys())
 
     # get range of locs, where loc1 is the already gotten loc
@@ -76,27 +90,34 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
         name = keys[i]
         loc1 = names_dict[name]
         try:
-            name2 = keys[i+1]  
+            name2 = keys[i+1]
             loc2 = names_dict[name2]
         except:
             loc2 = len(text_str)-1
         names_range[name] = [loc1, loc2]
 
-
     # assign each line to a name
     names_str_items = {}
     for name, nums in names_range.items():
         names_str_items[name] = text_str.loc[nums[0]:nums[1]-1]
-
+    # Check for addons
+    # if two white spaces happen, then remove the entire row because its an addon
+    # addons are listed under each items total price, and are included in the total already
+    import re
+    for name, items in names_str_items.items():
+        names_str_items[name] = items.apply(lambda x: 'ADDON' if re.findall('^(\s){2,}',x) else x)
     # Check for extras
     # extras always come after the full price of one meal in each person
-    # full meals are always preceded by the number of that meal
+    # full meals are always preceded by the number of that meal        
     for name, items in names_str_items.items():
+        num_of_addons = 0
+        num_of_addons += sum(items.apply(lambda x: 1 if 'ADDON' in x else 0))
+        if num_of_addons > 0:
+            st.info(f"{name.title()} had {num_of_addons} addons or customizations in their meal")
         for loc, strings in items.items():
             if strings.count("extra") > 0: # if an extra occurs
                 # call function, reassign the dict series with new, cropped series
                 names_str_items[name] = extras_remover(names_str_items,name, loc)
-
 
     # extract only the prices from each line
     names_prices = {}
@@ -104,7 +125,7 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
         my_data = data.str.extract('\$(\d+\.\d+)')
         my_data = my_data.dropna()[0]
         names_prices[name] = list(pd.to_numeric(my_data))
-
+    
     # make promotion negative
     if promo:
         names_prices['promotion'][0] = names_prices['promotion'][0] * -1
@@ -120,10 +141,9 @@ def sanity_check(names_prices):
     #### SANITY CHECK ####
     total = 0
     for k, v in names_prices.items():
-        if k not in 'subtotal':
+        if (k not in 'subtotal'):
             total += sum(names_prices[k])
-
-    st.info(f"The total paid was __${total}__, is this correct?")
+    st.info(f"The total paid was __${round(total,2)}__, is this correct?")
     sanity_check = st.radio("",["Yes","No"])
     if "no" in sanity_check.lower():
         st.warning("Sorry about that, try the manual or OCR options.")
