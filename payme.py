@@ -85,7 +85,6 @@ def start(button=None):
     else:
         gui = 'Manual'
         user_output = mm.manual_input(gui, params)
-            
     total_input, data = calc.total_calculator(**user_output)
     # dictionary of kwargs for venmo_calc()
     user_modified = {
@@ -95,6 +94,7 @@ def start(button=None):
         'description':user_output['description'],
         'total':total_input,
         'discount':user_output['discount'],
+        'contribution':user_output['contribution'],
         'my_dic':data
     }
     try:

@@ -199,6 +199,8 @@ def receipt_for_machine(my_dict, description, only_names, promo=True):
     return_me['fees_input'] = fees_input
     return_me["tax_input"] = tax_input # always 0 in mexico, VAT is included
     return_me['tip_input'] = tip_input
+    return_me['contribution'] = my_dict['contribution'][0]
+    
     return return_me
     
 
@@ -211,7 +213,7 @@ def app():
         col1,col2 = st.beta_columns(2)
         with col1:
             st.write("""
-            1. Copy and paste the entire contents of UberEats receipt from *Total* at the top to final charge at the bottom.
+            1. Copy and paste the entire contents of UberEats receipt from *Total* at the top to *Tip* at the bottom.
             2. Follow the prompts
             """)
         with col2:
@@ -243,6 +245,6 @@ def app():
         st.stop()
     if promo:
         st.info("Note: for calculation purposes, promotions are divided equally and subtracted from each total")
-    # standardize output for rest of script    
+    # standardize output for rest of script
     return_me = receipt_for_machine(names_prices, description, only_names, promo=promo)
     return return_me

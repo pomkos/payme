@@ -73,7 +73,8 @@ def manual_mode():
                  'fees_input':fees_input, 
                  'tax_input':tax_input,
                  'tip_input':tip_input,
-                 'discount':discount}
+                 'discount':discount,
+                 'contribution':0.0} # tip to establishment. Only for ubereats
     return return_me
 
 def copy_to_clipboard(text):

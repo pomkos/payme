@@ -174,6 +174,7 @@ def receipt_for_machine(my_dict, description, only_names):
     return_me['receipt_input'] = receipt_input
     return_me['fees_input'] = fees_input
     return_me["tax_input"] = tax_input # always 0 in mexico, VAT is included
+    return_me["contribution"] = 0.0 # tip to establishment. Only for ubereats
     return_me['tip_input'] = tip_input
     
     return return_me
