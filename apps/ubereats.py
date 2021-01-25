@@ -58,6 +58,12 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
     '''
     Eliminates all the extra fluff, retaining just the names and appropriate prices
     '''
+    names = list(names)
+    names.remove('tip')
+    names.append('contribution')
+    names.append('tip')
+    names = tuple(names)
+    receipt += '\n' # add at end so tip can be counted
     text_str = pd.Series(receipt.split('\n')) # split by new line
     # how many times does the word extras appear
     extras_num = receipt.count('extras')
@@ -81,10 +87,6 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
     # and loc2 is the next keys value
     names_range = {}
     for i in range(len(keys)):
-        if 'contribution' in receipt:
-            for loc, string in text_str.iteritems():
-                if 'contribution' in string:
-                    names_range['contribution'] = [i,i]
         name = keys[i]
         loc1 = names_dict[name]
         try:
@@ -98,15 +100,24 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
     names_str_items = {}
     for name, nums in names_range.items():
         names_str_items[name] = text_str.loc[nums[0]:nums[1]-1]
+    # Check for addons
+    # if two white spaces happen, then remove the entire row because its an addon
+    # addons are listed under each items total price, and are included in the total already
+    import re
+    for name, items in names_str_items.items():
+        names_str_items[name] = items.apply(lambda x: 'ADDON' if re.findall('^(\s){2,}',x) else x)
     # Check for extras
     # extras always come after the full price of one meal in each person
-    # full meals are always preceded by the number of that meal
+    # full meals are always preceded by the number of that meal        
     for name, items in names_str_items.items():
+        num_of_addons = 0
+        num_of_addons += sum(items.apply(lambda x: 1 if 'ADDON' in x else 0))
+        if num_of_addons > 0:
+            st.info(f"{name.title()} had {num_of_addons} addons or customizations in their meal")
         for loc, strings in items.items():
             if strings.count("extra") > 0: # if an extra occurs
                 # call function, reassign the dict series with new, cropped series
                 names_str_items[name] = extras_remover(names_str_items,name, loc)
-
 
     # extract only the prices from each line
     names_prices = {}
@@ -114,7 +125,7 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
         my_data = data.str.extract('\$(\d+\.\d+)')
         my_data = my_data.dropna()[0]
         names_prices[name] = list(pd.to_numeric(my_data))
-        
+    
     # make promotion negative
     if promo:
         names_prices['promotion'][0] = names_prices['promotion'][0] * -1
@@ -132,8 +143,7 @@ def sanity_check(names_prices):
     for k, v in names_prices.items():
         if (k not in 'subtotal'):
             total += sum(names_prices[k])
-    st.write(names_prices)
-    st.info(f"The total paid was __${total}__, is this correct?")
+    st.info(f"The total paid was __${round(total,2)}__, is this correct?")
     sanity_check = st.radio("",["Yes","No"])
     if "no" in sanity_check.lower():
         st.warning("Sorry about that, try the manual or OCR options.")
@@ -241,5 +251,3 @@ def app():
     # standardize output for rest of script    
     return_me = receipt_for_machine(names_prices, description, only_names, promo=promo)
     return return_me
-
-app()
