@@ -135,10 +135,16 @@ def sanity_check(names_prices):
             if len(v) > max_len:
                 max_len = len(v)
         for k,v in names_prices.items():
-                if len(v) < max_len:
+            for i in range(max_len): # repeat as long as the max_len is
+                if len(v) < max_len: # to append nan one at a time
                     v.append(np.nan) # to make all lists same size for df
-        st.table(pd.DataFrame(names_prices).T)
-        st.stop()
+        cols = []
+        for i in range(max_len): # give names to columns
+            cols.append(f'Item {i+1}')
+        food_feedback = pd.DataFrame(names_prices).T
+        food_feedback.columns = cols
+        st.table(food_feedback)
+        letsgo = False
     else:
         letsgo = True
         return
@@ -187,12 +193,14 @@ def app():
     Main region of uber eats parser
     '''
     with st.beta_expander("How To"):
-        st.write("""
-        1. Type in the restaurants name.
-        2. Copy and paste the entire contents of UberEats receipt from the *Total* at the top to final charge at the bottom.
-        3. Type in the names of everyone that appears on the receipt, separated by commas.
-        4. Confirm the total is correct.
-        """)
+        col1,col2 = st.beta_columns(2)
+        with col1:
+            st.write("""
+            1. Copy and paste the entire contents of UberEats receipt from *Total* at the top to final charge at the bottom.
+            2. Follow the prompts
+            """)
+        with col2:
+            st.markdown("![UberEats copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_ue.gif)")
     ### GUI ###
     description = st.text_input("(Optional) Description, like the restaurant name")
     receipt = st.text_area("Paste the entire receipt from UberEats below, including totals and fees")

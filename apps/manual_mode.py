@@ -4,7 +4,7 @@ import pandas as pd
 # GUI for manual input option
 def manual_input(gui, params):
     '''
-    Manual input of costs, fees, tax, tips.
+    Redirects to doordash, ubereats, or manual input
     '''
     if params:
         total_inputp, datap, tax_inputp, fees_inputp, tip_inputp, sharep = params
@@ -17,7 +17,7 @@ def manual_input(gui, params):
         fees_inputp=0.0
         tip_inputp=0.0
         sharep=False
-    st.title(f'Venmo Requests Calculator: {gui} Edition')
+    st.title(f'Venmo Requests Calculator: {gui}')
     if gui.lower() == '(alpha)':
         st.write("Let us request your friends for you!")
     else:
@@ -25,44 +25,57 @@ def manual_input(gui, params):
         
     if "uber" in gui.lower():
         from apps import ubereats as ue
+        st.write(ue.app())
         return ue.app()
+    elif "door" in gui.lower():
+        from apps import doordash as dd
+        return dd.app()
     else:
-        with st.beta_expander(label='How To'):
-            st.write(f"""
-                1. Input the name and itemized money spent in a format of:
-                    ```
-                    Peter: 20.21,5.23, 3.21
-                    Russell: 11.01, 15.89, 1.99
-                    ```
-                    Or on a single line:
-                    ```
-                    Peter 20.21 5.23 3.21 Russell 11.01 15.89 1.99
-                    ```
-                    Or with a split cost (Peter and Russell pay 8 each)
-                    ```
-                    Peter and Russell 16
-                    Peter: 20.21, 5.23
-                    Russell 11.01 15.89 1.99
-                    ```
-                2. Input the rest of the fees or tips as needed""")
-        description = st.text_input(label="(Optional) Description, like the restaurant name", value=describep)
-        receipt_input = st.text_area(label="Add name and food prices*", value=datap)
-        col1, col2, col3 = st.beta_columns(3)
+        return manual_mode()
+    
+def manual_mode():
+    '''
+    Completely manual input
+    '''
+    with st.beta_expander(label='How To'):
+        st.write(f"""
+            1. Input the name and itemized money spent in a format of:
+                ```
+                Peter: 20.21,5.23, 3.21
+                Russell: 11.01, 15.89, 1.99
+                ```
+                Or on a single line:
+                ```
+                Peter 20.21 5.23 3.21 Russell 11.01 15.89 1.99
+                ```
+                Or with a split cost (Peter and Russell pay 8 each)
+                ```
+                Peter and Russell 16
+                Peter: 20.21, 5.23
+                Russell 11.01 15.89 1.99
+                ```
+            2. Input the rest of the fees or tips as needed""")
+    description = st.text_input(label="(Optional) Description, like the restaurant name")
+    receipt_input = st.text_area(label="Add name and food prices*")
+    col1, col2 = st.beta_columns(2)
+    col3, col4 = st.beta_columns(2)
 
-        with col1:
-            fees_input = st.number_input("Fees in dollars",step=1.0, value=fees_inputp)
-        with col2:
-            tax_input = st.number_input("Tax in dollars",step=1.0, value=tax_inputp)
-        with col3:
-            tip_input = st.number_input("Tip in dollars",step=5.0, value=tip_inputp)
-
-        return_me = {'description':description, 
-                     'receipt_input':receipt_input, 
-                     'fees_input':fees_input, 
-                     'tax_input':tax_input,
-                     'tip_input':tip_input}
-        st.write(return_me)
-        return return_me
+    with col1:
+        fees_input = st.number_input("Fees in dollars",step=1.0)
+    with col2:
+        tax_input = st.number_input("Tax in dollars",step=1.0)
+    with col3:
+        tip_input = st.number_input("Tip in dollars",step=5.0)
+    with col4:
+        discount = st.number_input("Discount in dollars",step=1.0)
+        discount = discount*-1
+    return_me = {'description':description, 
+                 'receipt_input':receipt_input, 
+                 'fees_input':fees_input, 
+                 'tax_input':tax_input,
+                 'tip_input':tip_input,
+                 'discount':discount}
+    return return_me
 
 def copy_to_clipboard(text):
     '''
