@@ -181,31 +181,12 @@ def receipt_for_machine(my_dict, description, only_names):
     
 
 
-def app():
+def app(receipt, my_names, description):
     '''
-    Main region of doordash parser
+    Thalamus of doordash parser
     '''
     import base64
-    with st.beta_expander("How To"):
-        col1,col2 = st.beta_columns(2)
-        with col1:
-            st.write("""
-            1. Copy and paste the entire contents of DoorDash receipt from *Order Details* at the top to the total at the bottom.
-            2. Follow the prompts
-            """)
-        with col2:
-            st.markdown("![DoorDash copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_dd.gif)")
-    ### GUI ###
-    description = st.text_input("(Optional) Description, like the restaurant name")
-    receipt = st.text_area("Paste the entire receipt from DoorDash below, including totals and fees")
-    receipt = receipt.lower()
-    if receipt:
-        if "(you)" in receipt:
-            st.warning("This looks like an UberEats receipt. Switch to the UberEats page.")
-            confirm = st.checkbox("It's actually DoorDash")
-            if not confirm:
-                st.stop()
-        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+
     if not receipt:
         st.stop()
     if not my_names:
