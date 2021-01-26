@@ -27,7 +27,8 @@ def delivery_mode():
     ##########
     # HOW TO #
     ##########
-    st.title("Venmo Requests Calculator: Delivery App")
+    st.title("Venmo Requests Calculator: Delivery App Mode")
+    st.write("Give us the DoorDash or UberEats receipt, we'll spit out some venmo request links!")
     with st.beta_expander("How To"):
         col1,col2 = st.beta_columns(2)
         with col1:
@@ -60,36 +61,42 @@ def delivery_mode():
     #########
     # LOGIC #
     #########
-    if "(you)" in receipt: # ubereats has this
-        st.info("This looks like an UberEats receipt.")
-        deny = st.checkbox("It's actually DoorDash")
-        if deny:
-            service_chosen = 'doordash'
-        else: #its ubereats
-            service_chosen = 'ubereats'
-            receipt = receipt.replace(',','')
-    elif "participant" in receipt: # doordash
-        st.info("This looks like a DoorDash receipt.")
-        deny = st.checkbox("It's actually UberEats")
-        if deny:
-            service_chosen = 'ubereats'
-        else:
-            service_chosen = 'doordash'
-    my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
-    service_chosen = service_chosen.lower()
-        
-    if 'door' in service_chosen:
-        from apps import doordash as dd
-        user_output = dd.app(receipt, my_names, description)
-    elif 'uber' in service_chosen:
-        from apps import ubereats as ue
-        user_output = ue.app(receipt, my_names, description)
-    return user_output
+    try:
+        if "(you)" in receipt: # ubereats has this
+            st.info("This looks like an UberEats receipt.")
+            deny = st.checkbox("It's actually DoorDash")
+            if deny:
+                service_chosen = 'doordash'
+            else: #its ubereats
+                service_chosen = 'ubereats'
+                receipt = receipt.replace(',','')
+        elif "participant" in receipt: # doordash
+            st.info("This looks like a DoorDash receipt.")
+            deny = st.checkbox("It's actually UberEats")
+            if deny:
+                service_chosen = 'ubereats'
+            else:
+                service_chosen = 'doordash'
+        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+        service_chosen = service_chosen.lower()
+
+        if 'door' in service_chosen:
+            from apps import doordash as dd
+            user_output = dd.app(receipt, my_names, description)
+        elif 'uber' in service_chosen:
+            from apps import ubereats as ue
+            user_output = ue.app(receipt, my_names, description)
+        return user_output
+    except:
+        st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the app!")
+        st.stop()
         
 def manual_mode():
     '''
     Completely manual input
     '''
+    st.title("Venmo Requests Calculator: Manual Mode")
+    st.write("Give us some info, we'll give you venmo request links!")
     with st.beta_expander(label='How To'):
         st.write(f"""
             1. Input the name and itemized money spent in a format of:

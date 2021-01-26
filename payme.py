@@ -47,9 +47,9 @@ def start(button=None): # button arg doesnt do anything
     params = None
     
     select_input = 'release' # disabled user section of payme ('alpha' to activate)
-    service_chosen = st.sidebar.radio("What service did you use?",options=['DoorDash or UberEats','Other'])
+    service_chosen = st.sidebar.radio("Chose a receipt parser",options=['Delivery App','Manual Mode'])
     
-    if 'Other' not in service_chosen:
+    if 'Manual' not in service_chosen:
         gui = 'doordelivery'
         user_output = mm.manual_input(gui, params)
     else:
