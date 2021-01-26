@@ -101,35 +101,77 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             person_total = my_total + tax_part + fee_part + tip_part + disc_part + store_part
             rounded_sum += person_total
             request[key] = person_total
-        ### Explain the calculation for transparency ###
-        this_happened = f"""
-            1. Each person's sum was calculated using: $m_t=d_s + (d_s * p_x) + (d_s*p_d) + (d_s * p_r) + d_f - d_d$
-                * $m_t$ = total money to request
-                * $d_s$ = dollars spent on food
-                * $p_x$ = percent tax
-                * $p_d$ = percent tip to driver
-                * $p_r$ = percent tip to restaurant
-                * $d_f$ = dollars spent on fee
-                * $d_d$ = discount, if any
-                
-            """
+        ### Dynamically explain the calculation for transparency ###
+        formula = """
+1. Each person's sum was calculated using: $m_t = d_s"""
+        
+        formula_key = """
+    * $m_t$ = total money to request
+    * $d_s$ = dollars spent on food"""
+        steps = '''
+        
+        '''
+        
+        #############
+        #    TAX    #
+        #############
         if tax_perc > 0:
-            this_happened += f"""1. Tax% ($p_x$) was calculated using {round(tax,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tax_perc*100,2)}%__
+            formula += " + (d_s * p_x)"
+            formula_key += """
+    * $p_x$ = percent tax"""
+            steps += f"""
+2. Tax% ($p_x$) was calculated using {round(tax,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tax_perc*100,2)}%__
             """
+        ##############
+        # TIP DRIVER #
+        ##############
         if tip_perc > 0:
-            this_happened += f"""2. Tip to the driver ($p_p$) was calculated using {round(tip,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tip_perc*100,2)}%__
+            formula += " + (d_s*p_d)"
+            formula_key += """
+    * $p_d$ = percent tip to driver"""
+            steps += f"""
+2. Tip to the driver ($p_p$) was calculated using {round(tip,2)}/({round(total,2)}-{round(tip,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(tip_perc*100,2)}%__
             """
+        #############
+        # TIP STORE #
+        #############
         if (contribution > 0):
-            this_happened += f"""7. Tip to the restaurant ($p_r$) was calculated using {round(contribution,2)}/({round(total,2)}-{round(tip,2)}-{round(contribution,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(store_perc*100,2)}%__
+            formula += " + (d_s * p_r)"
+            formula_key += """
+    * $p_r$ = percent tip to restaurant"""
+            steps += f"""
+2. Tip to the restaurant ($p_r$) was calculated using {round(contribution,2)}/({round(total,2)}-{round(tip,2)}-{round(contribution,2)}-{round(tax,2)}-{round(misc_fees,2)}-({round(discount,2)})): __{round(store_perc*100,2)}%__
             """
+        #############
+        #    FEES   #
+        #############
         if misc_fees > 0:
-            this_happened += f"""3. Fees were distributed equally: __${round(fee_part,2)}__ per person
-            """    
-        if convert:
-            this_happened += f"""5. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert[0]}__, the rate was last updated on {usd_convert[1]} using information provided by the [RatesAPI](https://ratesapi.io/)
-            """
+            formula += " + d_f"
+            formula_key += """
+    * $d_f$ = dollars spent on fee"""
+            steps += f"""
+2. Fees were distributed equally: __${round(fee_part,2)}__ per person
+            """  
+        #############
+        # DISCOUNT  #
+        #############
         if (discount != 0):
-            this_happened += f"6. The discount was distributed equally: deducted __${round(disc_part,2)}__ from each person"
+            formula +=  "- d_d"
+            formula_key += """
+    * $d_d$ = discount"""
+            steps += f"""
+2. The discount was distributed equally: deducted __${round(disc_part,2)}__ from each person"""
+        #############
+        # CURRENCY  #
+        #############
+        if convert:
+            steps += f"""
+2. All tax, tip, fees, totals were converted to USD. __1 USD = {usd_convert[0]}__.
+    * The rate was last updated on {usd_convert[1]} using information provided by [RatesAPI](https://ratesapi.io/)
+            """
+        # put it all together
+        this_happened = formula + "$" + formula_key + steps
+        
         with st.beta_expander(label='What just happened?'):
             st.write(this_happened)
         rounded_sum = round(rounded_sum,2)

@@ -199,8 +199,12 @@ def app():
     description = st.text_input("(Optional) Description, like the restaurant name")
     receipt = st.text_area("Paste the entire receipt from DoorDash below, including totals and fees")
     receipt = receipt.lower()
-    # receipt = receipt.replace(',','')
     if receipt:
+        if "(you)" in receipt:
+            st.warning("This looks like an UberEats receipt. Switch to the UberEats page.")
+            confirm = st.checkbox("It's actually DoorDash")
+            if not confirm:
+                st.stop()
         my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
     if not receipt:
         st.stop()

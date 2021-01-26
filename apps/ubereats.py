@@ -125,7 +125,8 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
         my_data = data.str.extract('\$(\d+\.\d+)')
         my_data = my_data.dropna()[0]
         names_prices[name] = list(pd.to_numeric(my_data))
-    
+    if 'contribution' not in receipt:
+        names_prices['contribution'] = [0]
     return names_prices
 
 def sanity_check(names_prices):
@@ -224,6 +225,11 @@ def app():
     receipt = receipt.lower()
     receipt = receipt.replace(',','')
     if receipt:
+        if "participant" in receipt:
+            st.warning("This looks like a DoorDash receipt. Switch to the DoorDash page.")
+            confirm = st.checkbox("It's actually UberEats")
+            if not confirm:
+                st.stop()
         my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
     if not receipt:
         st.stop()
