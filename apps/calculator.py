@@ -14,7 +14,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
     c = db_tool.getCurrency()
     df = c.df
     options = df['country'].sort_values().reset_index(drop=True)
-    ctry = st.sidebar.selectbox('Select country', options=options, index=17)
+    ctry = st.selectbox('Select country', options=options, index=17)
     usd_convert = list(df[df['country']==ctry]['rate'])[0] # get rate from db
     symbol = list(df[df['country']==ctry]['code'])[0]
     
@@ -73,12 +73,11 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         -------------------
     """
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
-    ###### MXD to USD conversion ######
-    st.sidebar.write("_______")
-    convert = st.sidebar.checkbox("Convert to USD") # ask if MXD or USD is required
+    ###### Currency to USD conversion ######
+    convert = st.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, discount, contribution, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount)
-    ###################################
+    ########################################
     precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees+discount+contribution,2)
     if total != precheck_sum:
         st.error(f"You provided {total} as the total, but I calculated {precheck_sum}")
