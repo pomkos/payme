@@ -110,10 +110,6 @@ def receipt_formatter(receipt, names_dict, names, promo = True):
     # extras always come after the full price of one meal in each person
     # full meals are always preceded by the number of that meal        
     for name, items in names_str_items.items():
-        num_of_addons = 0
-        num_of_addons += sum(items.apply(lambda x: 1 if 'ADDON' in x else 0))
-        if num_of_addons > 0:
-            st.info(f"{name.title()} had {num_of_addons} addons or customizations in their meal")
         for loc, strings in items.items():
             if strings.count("extra") > 0: # if an extra occurs
                 # call function, reassign the dict series with new, cropped series
@@ -206,31 +202,11 @@ def receipt_for_machine(my_dict, description, only_names, promo=True):
     
 
 
-def app():
+def app(receipt, my_names, description):
     '''
-    Main region of uber eats parser
+    Thalamus of uber eats parser
     '''
-    with st.beta_expander("How To"):
-        col1,col2 = st.beta_columns(2)
-        with col1:
-            st.write("""
-            1. Copy and paste the entire contents of UberEats receipt from *Total* at the top to *Tip* at the bottom.
-            2. Follow the prompts
-            """)
-        with col2:
-            st.markdown("![UberEats copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_ue.gif)")
-    ### GUI ###
-    description = st.text_input("(Optional) Description, like the restaurant name")
-    receipt = st.text_area("Paste the entire receipt from UberEats below, including totals and fees")
-    receipt = receipt.lower()
-    receipt = receipt.replace(',','')
-    if receipt:
-        if "participant" in receipt:
-            st.warning("This looks like a DoorDash receipt. Switch to the DoorDash page.")
-            confirm = st.checkbox("It's actually UberEats")
-            if not confirm:
-                st.stop()
-        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+
     if not receipt:
         st.stop()
     if not my_names:

@@ -34,9 +34,9 @@ footer {visibility: hidden;}
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-def start(button=None):
+def start(button=None): # button arg doesnt do anything
     '''
-    Main app. Creates the GUI and redirects requests to the appropriate scripts. The Thalamus.
+    Thalamus. Creates the GUI and redirects requests to the appropriate scripts. The Thalamus.
     '''
 #     if st.experimental_get_query_params():
 #         params = use_params()
@@ -45,46 +45,17 @@ def start(button=None):
 #             st.info("Looks like this is a shared link, so we filled in the info for you!")
 #             select_input = params[-2]
     params = None
-    if type(button) == str:
-        pass
-    services = ['DoorDash','UberEats','Other']
-    service_chosen= st.sidebar.radio("What service did you use?", options=services,index=0)
-    service_chosen = service_chosen.lower()
     
-    options = ['Copy-Paste','Auto Request (Alpha)', 'Image Recognition (Beta)']
-    if 'door' in service_chosen:
-        website = 'doordash'
-        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
-        
-    elif 'uber' in service_chosen:
-        website = 'ubereats'
-        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
-        if ('beta' in select_input.lower()) or ('alpha' in select_input.lower()):
-            st.warning('Not yet implemented.')
-            st.stop()
-        
-    elif 'other' in service_chosen:
-        select_input = 'Manual'
-        
-    select_input = select_input.lower()
+    select_input = 'release' # disabled user section of payme ('alpha' to activate)
+    service_chosen = st.sidebar.radio("Chose a receipt parser",options=['Delivery App','Manual Mode'])
     
-    if 'copy' in select_input:
-        if 'door' in website:
-            gui = 'DoorDash'
-            user_output = mm.manual_input(gui, params)
-        elif 'uber' in website:
-            gui = 'UberEats'
-            user_output = mm.manual_input(gui, params)
-    elif 'beta' in select_input:
-        from apps import beta_image_rec as ir
-        gui = '(Beta)'
-        user_output = ir.auto_input(gui)
-    elif 'alpha' in select_input:
-        gui = '(Alpha)'
+    if 'Manual' not in service_chosen:
+        gui = 'doordelivery'
         user_output = mm.manual_input(gui, params)
     else:
         gui = 'Manual'
         user_output = mm.manual_input(gui, params)
+        
     total_input, data = calc.total_calculator(**user_output)
     # dictionary of kwargs for venmo_calc()
     user_modified = {
@@ -98,13 +69,8 @@ def start(button=None):
         'my_dic':data
     }
     try:
-        # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
-        if "alpha" in select_input:
-            calc_message = calc.venmo_calc(**user_modified, clean=True)
-        else:
-            # if manual or orc, then show the html table
-            calc_message = calc.venmo_calc(**user_modified, clean=False)
-            mm.html_table(calc_message["messages"], calc_message["request_money"])
+        calc_message = calc.venmo_calc(**user_modified, clean=False)
+        mm.html_table(calc_message["messages"], calc_message["request_money"])
 
     except ZeroDivisionError:
         st.info("See the how to for more information!")
@@ -116,8 +82,6 @@ def start(button=None):
         st.success("Thanks for using payme! <3")
         send_webhook() # notify Pete that someone used payme!
         st.stop()
-        from apps import alpha_clipboard as ac
-        ac.set_params(my_dic = data, total=total_input, tax=tax_input, tip=tip_input, misc_fees=fees_input,view=select_input ,share=True,)
         
     ###################
     # TESTING GROUNDS #
@@ -129,6 +93,41 @@ def start(button=None):
                         messages = calc_message['messages'],db_info=db_info)
         st.write("_________________________")
     
+def image_rec_logic():
+    '''
+    Image recognition is moot, but saving for posterity and funsies
+    '''
+    ################
+    # MORE OPTIONS #
+    ################
+    options = ['Copy-Paste','Auto Request (Alpha)', 'Image Recognition (Beta)']
+    if 'door' in service_chosen:
+        website = 'doordash'
+        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
+
+    elif 'uber' in service_chosen:
+        website = 'ubereats'
+        select_input = st.sidebar.selectbox("How would you like to analyze the receipt?", options = options)
+        if ('beta' in select_input.lower()) or ('alpha' in select_input.lower()):
+            st.warning('Not yet implemented.')
+            st.stop()
+    select_input = select_input.lower()
+    if 'beta' in select_input:
+        from apps import beta_image_rec as ir
+        gui = '(Beta)'
+        user_output = ir.auto_input(gui)
+    elif 'alpha' in select_input:
+        gui = '(Alpha)'
+        user_output = mm.manual_input(gui, params)
+        
+    # gets a dictionary of total spent, dictionary of spent on food, percent tip, percent tax, and misc fees per person
+    if "alpha" in select_input:
+        calc_message = calc.venmo_calc(**user_modified, clean=True)
+    else:
+        # if manual or orc, then show the html table
+        calc_message = calc.venmo_calc(**user_modified, clean=False)
+        mm.html_table(calc_message["messages"], calc_message["request_money"])
+            
 def send_webhook():
     '''
     Sends a hook to zapier, which emails me.

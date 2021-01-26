@@ -4,7 +4,7 @@ import pandas as pd
 # GUI for manual input option
 def manual_input(gui, params):
     '''
-    Redirects to doordash, ubereats, or manual input
+    Thalamus. Redirects to doordash, ubereats, or manual input
     '''
     if params:
         total_inputp, datap, tax_inputp, fees_inputp, tip_inputp, sharep = params
@@ -17,25 +17,86 @@ def manual_input(gui, params):
         fees_inputp=0.0
         tip_inputp=0.0
         sharep=False
-    st.title(f'Venmo Requests Calculator: {gui}')
-    if gui.lower() == '(alpha)':
-        st.write("Let us request your friends for you!")
-    else:
-        st.write("Give us some info, we'll give you a personalized link!")
         
-    if "uber" in gui.lower():
-        from apps import ubereats as ue
-        return ue.app()
-    elif "door" in gui.lower():
-        from apps import doordash as dd
-        return dd.app()
+    if "delivery" in gui.lower():
+        return delivery_mode()
     else:
         return manual_mode()
-    
+
+def delivery_mode():
+    ##########
+    # HOW TO #
+    ##########
+    st.title("Venmo Requests Calculator: Delivery App Mode")
+    st.write("Give us the DoorDash or UberEats receipt, we'll spit out some venmo request links!")
+    with st.beta_expander("How To"):
+        col1,col2 = st.beta_columns(2)
+        with col1:
+            st.write("""
+            __DoorDash__
+
+            1. Copy and paste the entire contents of DoorDash receipt from __Order Details__ at the top to the __Total__ at the bottom.
+            2. Follow the prompts """)
+            st.write("")
+            st.markdown("![DoorDash copy instructions](https://github.com/pomkos/payme/raw/main/images/copy_dd.gif)")
+        with col2:
+            st.write("""
+            __UberEats__
+
+            1. Copy and paste the entire contents of UberEats receipt from __Total__ at the top to __Tip__ at the bottom.
+            2. Follow the prompts""")
+            st.write("")
+            st.markdown("![UberEats copy gif placeholder](https://github.com/pomkos/payme/raw/main/images/copy_ue.gif)")
+    #######
+    # GUI #
+    #######
+    description = st.text_input("(Optional) Description, like the restaurant name")
+    receipt = st.text_area("Paste the entire receipt from your service, including totals and fees", height = 300)
+    receipt = receipt.lower()
+
+    if not receipt:
+        st.info("See the how to for more information!")
+        st.stop()
+
+    #########
+    # LOGIC #
+    #########
+    try:
+        if "(you)" in receipt: # ubereats has this
+            st.info("This looks like an UberEats receipt.")
+            deny = st.checkbox("It's actually DoorDash")
+            if deny:
+                service_chosen = 'doordash'
+            else: #its ubereats
+                service_chosen = 'ubereats'
+                receipt = receipt.replace(',','')
+        elif "participant" in receipt: # doordash
+            st.info("This looks like a DoorDash receipt.")
+            deny = st.checkbox("It's actually UberEats")
+            if deny:
+                service_chosen = 'ubereats'
+            else:
+                service_chosen = 'doordash'
+        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+        service_chosen = service_chosen.lower()
+
+        if 'door' in service_chosen:
+            from apps import doordash as dd
+            user_output = dd.app(receipt, my_names, description)
+        elif 'uber' in service_chosen:
+            from apps import ubereats as ue
+            user_output = ue.app(receipt, my_names, description)
+        return user_output
+    except:
+        st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the app!")
+        st.stop()
+        
 def manual_mode():
     '''
     Completely manual input
     '''
+    st.title("Venmo Requests Calculator: Manual Mode")
+    st.write("Give us some info, we'll give you venmo request links!")
     with st.beta_expander(label='How To'):
         st.write(f"""
             1. Input the name and itemized money spent in a format of:
