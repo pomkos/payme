@@ -77,7 +77,7 @@ def delivery_mode():
                 service_chosen = 'ubereats'
             else:
                 service_chosen = 'doordash'
-        my_names = st.text_input("Add names below, separated by a comma. Ex: peter, Russell")
+        my_names = st.text_input("Add names from receipt below, separated by a comma. Ex: peter, Russell")
         service_chosen = service_chosen.lower()
 
         if 'door' in service_chosen:
@@ -88,8 +88,11 @@ def delivery_mode():
             user_output = ue.app(receipt, my_names, description)
         return user_output
     except:
-        st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the app!")
-        st.stop()
+        if not my_names:
+            st.stop()
+        else:
+            st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the app!")
+            st.stop()
         
 def manual_mode():
     '''
