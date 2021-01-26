@@ -207,7 +207,8 @@ Made with ❤️ at payme.peti.work''' # %0A creates a new line
         message_output[key] = statement # stores message only, no venmo link
         
         # "&not" gets converted to a weird notation, not interpreted by ios. Use "&amp;" to escape the ampersand
-        link = f"https://venmo.com/?txn={txn}&amp;audience={audience}&amp;recipients={key}&amp;amount={amount[0]}&amp;note={statement}"
+        # took out recipients={key}&amp; so recipients dont get autofilled
+        link = f"https://venmo.com/?txn={txn}&amp;audience={audience}&amp;amount={amount[0]}&amp;note={statement}"
         link_output[key] = link
 
     if clean_message:
