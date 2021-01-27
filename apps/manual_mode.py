@@ -44,7 +44,8 @@ def delivery_mode():
             __UberEats__
 
             1. Copy and paste the entire contents of UberEats receipt from __Total__ at the top to __Tip__ at the bottom.
-            2. Follow the prompts""")
+            2. Once pasted, make sure names are on separate lines.
+            3. Follow the prompts""")
             st.write("")
             st.markdown("![UberEats copy gif placeholder](https://github.com/pomkos/payme/raw/main/images/copy_ue.gif)")
     #######
