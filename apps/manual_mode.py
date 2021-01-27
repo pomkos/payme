@@ -120,7 +120,7 @@ def manual_mode():
                 ```
             2. Input the rest of the fees or tips as needed""")
     description = st.text_input(label="(Optional) Description, like the restaurant name")
-    receipt_input = st.text_area(label="Add name and food prices*")
+    receipt_input = st.text_area(label="Add name and food prices*", height=150)
     col1, col2 = st.beta_columns(2)
     col3, col4 = st.beta_columns(2)
 
