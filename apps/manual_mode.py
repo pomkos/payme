@@ -23,6 +23,33 @@ def manual_input(gui, params):
     else:
         return manual_mode()
 
+def name_finder(receipt):
+    '''
+    First attempt at automatically finding the names of people in receipts
+    '''
+    from apps import db_tool as db
+    import re
+    all_names = db.name_loader()
+    receipt = receipt.replace(',', ' ').lower()
+    words = re.findall(r'\w+', receipt)
+
+    my_names = ''
+    for row in words:
+        for name in all_names['names']:
+            if name == row:
+                my_names += f"{name},"
+                st.success(f"Found {name.title()}")
+    my_names = my_names.strip(',')
+    feedback = st.checkbox("These are the right names",value=True)
+    if feedback:
+        return my_names
+    else:
+        my_names = st.text_input("Add the names below, separated by a comma")
+        if my_names:
+            return my_names
+        else:
+            st.stop()
+    
 def delivery_mode():
     ##########
     # HOW TO #
@@ -78,7 +105,8 @@ def delivery_mode():
                 service_chosen = 'ubereats'
             else:
                 service_chosen = 'doordash'
-        my_names = st.text_input("Add names from receipt below, separated by a comma. Ex: peter, Russell")
+        # my_names2 = st.text_input("Add names from receipt below, separated by a comma. Ex: peter, Russell")
+        my_names = name_finder(receipt)
         service_chosen = service_chosen.lower()
 
         if 'door' in service_chosen:
@@ -88,12 +116,10 @@ def delivery_mode():
             from apps import ubereats as ue
             user_output = ue.app(receipt, my_names, description)
         return user_output
-    except:
-        if not my_names:
-            st.stop()
-        else:
-            st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the app!")
-            st.stop()
+    except Exception as e:
+        st.write(e)
+        st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the receipt!")
+        st.stop()
         
 def manual_mode():
     '''

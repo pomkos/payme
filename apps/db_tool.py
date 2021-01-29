@@ -3,6 +3,14 @@ import sqlalchemy as sq
 import pandas as pd
 # Everything you need to mess with the dataset
 
+def name_loader():
+    '''
+    Loads table of common names
+    '''
+    engine = sq.create_engine("sqlite:///data/names.db")
+    cnx = engine.connect()
+    return pd.read_sql('names',cnx)
+
 def adv_settings():
     '''
     Shows an expander with option to submit data to database
