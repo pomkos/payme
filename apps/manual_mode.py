@@ -32,24 +32,32 @@ def name_finder(receipt):
     all_names = db.name_loader()
     receipt = receipt.replace(',', ' ').lower()
     words = re.findall(r'\w+', receipt)
-
+    st.write("--------------------")
     my_names = ''
+    st.write("Check the boxes that are incorrect:")
     for row in words:
         for name in all_names['names']:
             if name == row:
                 my_names += f"{name},"
-                st.success(f"Found {name.title()}")
-    my_names = my_names.strip(',')
-    feedback = st.checkbox("These are the right names",value=True)
-    if feedback:
-        return my_names
-    else:
-        my_names = st.text_input("Add the names below, separated by a comma")
-        if my_names:
+                st.success(f"Detected {name.title()}")
+    if my_names != '':
+        my_names = my_names.strip(',') # get rid of last comma
+        feedback = st.checkbox("These are the right names",value=False)
+        if feedback:
             return my_names
         else:
-            st.stop()
-    
+            my_names = ''
+            names = st.text_input("Add the correct names below:")
+            if names:
+                names_list = re.findall(r'\w+', names)
+                all_names = all_names.append(names_list)
+                st.write(all_names)
+                for x in names_list:
+                    my_names += x
+                    my_names += ','
+                return my_names.strip(',')  
+
+
 def delivery_mode():
     ##########
     # HOW TO #
