@@ -34,7 +34,6 @@ def name_finder(receipt):
     words = re.findall(r'\w+', receipt)
     st.write("--------------------")
     my_names = ''
-    st.write("Check the boxes that are incorrect:")
     for row in words:
         for name in all_names['names']:
             if name == row:
@@ -42,21 +41,28 @@ def name_finder(receipt):
                 st.success(f"Detected {name.title()}")
     if my_names != '':
         my_names = my_names.strip(',') # get rid of last comma
-        feedback = st.checkbox("These are the right names",value=False)
+        feedback = st.checkbox("These are the right names",value=True)
         if feedback:
             return my_names
         else:
-            my_names = ''
-            names = st.text_input("Add the correct names below:")
-            if names:
-                names_list = re.findall(r'\w+', names)
-                all_names = all_names.append(names_list)
-                st.write(all_names)
-                for x in names_list:
-                    my_names += x
-                    my_names += ','
-                return my_names.strip(',')  
+            return name_input()
+    else:
+        st.warning("Sorry, the names were not found.")
+        return name_input()
 
+def name_input():
+    '''
+    Ask for and format names
+    '''
+    import re
+    my_names = ''
+    names = st.text_input("Add names below:")
+    if names:
+        names_list = re.findall(r'\w+', names)
+        for x in names_list:
+            my_names += x
+            my_names += ','
+        return my_names.strip(',')
 
 def delivery_mode():
     ##########
@@ -98,7 +104,7 @@ def delivery_mode():
     # LOGIC #
     #########
     try:
-        if "(you)" in receipt: # ubereats has this
+        if "(you)" in receipt.lower(): # ubereats has this
             st.info("This looks like an UberEats receipt.")
             deny = st.checkbox("It's actually DoorDash")
             if deny:
@@ -113,10 +119,11 @@ def delivery_mode():
                 service_chosen = 'ubereats'
             else:
                 service_chosen = 'doordash'
-        # my_names2 = st.text_input("Add names from receipt below, separated by a comma. Ex: peter, Russell")
+        else:
+            st.error("Unknown delivery app. See the how to, try the manual mode, or contact Pete to request support for the receipt!")
+            st.stop()
         my_names = name_finder(receipt)
         service_chosen = service_chosen.lower()
-
         if 'door' in service_chosen:
             from apps import doordash as dd
             user_output = dd.app(receipt, my_names, description)
@@ -126,7 +133,6 @@ def delivery_mode():
         return user_output
     except Exception as e:
         st.write(e)
-        st.error("Unknown delivery app. Try manual mode or contact Pete to request support for the receipt!")
         st.stop()
         
 def manual_mode():
