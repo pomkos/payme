@@ -278,7 +278,8 @@ def html_table(link_output, request_money):
         copy_to_clipboard(copy_me) # copy button
     # get the pay links
     else:
-        v_user = st.text_input("Your venmo username")
+        # v_user = st.text_input("Your venmo username")  # didnt wanna dig into code, but this doesn't work
+        v_user = ''
         if v_user:
             html_table_all = html_table_all.replace("charge","pay")
             html_table_all = replace_recip(html_table_all,v_user)
