@@ -230,7 +230,7 @@ Your total '''
             statement+= f'at {description.title()} '
         statement+= f'was ${round(my_dic[key],2)}'
         if tip_perc > 0.0:
-            statement += f', tip to driver was {round(tip_perc*100,2)}﹪'
+            statement += f', tip to driver or wait staff was {round(tip_perc*100,2)}﹪'
         if store_perc > 0.0:
             statement += f', tip to establishment was {round(store_perc*100,2)}﹪'
         if tax_perc > 0.0:
