@@ -42,6 +42,8 @@ streamlit run payme.py
 
 ## Host
 
+Use the [streamlit_starter](https://github.com/pomkos/streamlit_starter) repo, or follow the instructions below.
+
 1. Create a new file outside the `payme` directory:
 
 ```
