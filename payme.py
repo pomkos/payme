@@ -56,12 +56,6 @@ def start():
         st.info("See the how to for more information!")
         calc_message={'request_money':None}
         st.stop()
-
-    if st.button("Ping Pete some love!"):
-        st.balloons()
-        st.success("Thanks for using payme! <3")
-        send_webhook() # notify Pete that someone used payme!
-        st.stop()
         
 def delivery_brain():
     '''
@@ -137,23 +131,6 @@ def delivery_brain():
         st.write(e)
         st.stop()
 
-def send_webhook():
-    '''
-    Sends a hook to zapier, which emails me. For the "Send Pete some love" button.
-    '''
-    import json
-    import requests
-    from apps import secret
-    
-    webhook_url = secret.app()
-    response = requests.get(webhook_url)
-    
-    if response.status_code != 200:
-        raise ValueError(
-        'Request to zapier returned an error %s, the response is:\n%s'
-        % (response.status_code, response.text)
-    )
-        
 def app():
     '''
     Only purpose is to start the app from bash script. Own function so the rest of the functions can be organized in a logical way.
