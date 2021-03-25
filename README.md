@@ -2,7 +2,11 @@
 
 1. [Description](#payme)
 2. [Screenshots](#screenshots)
-    1. [Autofilled Venmo Request](#autofilled-venmo-request)
+    1. [Delivery App Mode](#delivery-app-mode-default)
+    2. [Manual Mode](#manual-mode)
+    3. [What Happened](#what-happened)
+    4. [Output](#output)
+    5. [Venmo Preview](#venmo-preview)
 3. [How-Tos](#how-tos)
     1. [Run](#run)
     2. [Host](#host)
@@ -11,6 +15,26 @@
 Just a simple repo to calculate how much to request from people after a night out
 
 # Screenshots
+
+## Delivery App Mode (default)
+
+![](https://github.com/pomkos/payme/blob/main/images/default_view.png)
+
+## Manual Mode
+
+![](https://github.com/pomkos/payme/blob/main/images/manual_mode.png)
+
+## What Happened
+
+![](https://github.com/pomkos/payme/blob/main/images/what_happened.png)
+
+## Output
+
+![](https://github.com/pomkos/payme/blob/main/images/testaurant_output.png)
+
+## Venmo Preview
+
+![](https://github.com/pomkos/payme/blob/main/images/venmo_preview.png)
 
 # How tos
 ## Run
