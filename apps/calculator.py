@@ -1,15 +1,28 @@
 # content creator, including price splitting, text formatting, message creating
 
 import streamlit as st
-import pandas as pd
-import numpy as np
 import re
-import sys
 
 def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount):
     '''
     Converts from local currency to USD
+    
+    input
+    -----
+    my_dic: dict
+        Dictionary of name: prices
+    total: float
+    tax: float
+    tip: float
+    misc_fees: float
+    contribution: float
+    discount: float
+    
+    return
+    ------
+    All of the above, but with converted currency
     '''
+    # Get currency info
     from apps import db_tool
     c = db_tool.getCurrency()
     df = c.df
@@ -18,6 +31,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
     usd_convert = list(df[df['country']==ctry]['rate'])[0] # get rate from db
     symbol = list(df[df['country']==ctry]['code'])[0]
     
+    # Convert prices
     for name, price in my_dic.items():
         my_dic[name] = price/usd_convert
     discount = discount/usd_convert
@@ -27,7 +41,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
     misc_fees = misc_fees/usd_convert
     contribution = contribution/usd_convert
     
-    
+    # To construct webgui info
     date = df['date_updated'][0].date()
     usd_convert_type = f'{round(usd_convert,2)} {symbol}'
     convert_info = [usd_convert_type, date]
@@ -36,7 +50,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
 
     
 
-def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0, convert=False, contribution=0, clean=False):
+def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0, convert=False, contribution=0):
     """
     Returns lump sums to request using venmo
 
@@ -73,12 +87,15 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         -------------------
     """
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
+    
     ###### Currency to USD conversion ######
     convert = st.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, discount, contribution, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount)
     ########################################
+    
     precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees+discount+contribution,2)
+    # Just a quick precheck to make sure manual input was correct
     if total != precheck_sum:
         st.error(f"You provided {total} as the total, but I calculated {precheck_sum}")
         st.stop()
@@ -101,6 +118,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             person_total = my_total + tax_part + fee_part + tip_part + disc_part + store_part
             rounded_sum += person_total
             request[key] = person_total
+            
         ### Dynamically explain the calculation for transparency ###
         formula = """
 1. Each person's sum was calculated using: $m_t = d_s"""
@@ -187,7 +205,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         from apps import manual_mode as mm
         # get dictionary of name:message
 
-        # gather variables
+        # gather variables for **kwarg
         for_messages = {
             'description':description,
             'request':request_money,
@@ -198,7 +216,6 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             'fee_part':fee_part,
             'misc_fees':misc_fees,
             'disc_part':disc_part,
-            'clean_message':clean, # not sure what this is...
             'convert':convert
         }
         if convert:
@@ -210,7 +227,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
                 "messages":messages}       
         return data
     
-def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,misc_fees,disc_part, store_perc, convert, convert_info='', clean_message=False):
+def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,misc_fees,disc_part, store_perc, convert, convert_info=''):
     '''
     Generates a message or link that directs user to venmo app with prefilled options
     '''
@@ -249,14 +266,11 @@ Made with ❤️ at payme.peti.work''' # %0A creates a new line
         message_output[key] = statement # stores message only, no venmo link
         
         # "&not" gets converted to a weird notation, not interpreted by ios. Use "&amp;" to escape the ampersand
-        # took out recipients={key}&amp; so recipients dont get autofilled
+        # took out recipients={key}&amp; so recipients dont get autofilled. Doesn't work in iOS or Android.
         link = f"https://venmo.com/?txn={txn}&amp;audience={audience}&amp;amount={amount[0]}&amp;note={statement}"
         link_output[key] = link
 
-    if clean_message:
-        return message_output
-    else:
-        return link_output
+    return link_output
     
 class receiptFormat():
     # Receipt formatting
@@ -287,7 +301,7 @@ class receiptFormat():
 
 def total_calculator(description, receipt_input, fees_input, tax_input, tip_input, discount, contribution=0):
     """
-    Calculates the total amount spent using all variables. Separated function so we can take account for params
+    Calculates the total amount spent using all variables. Separated function so we can take account for params in future
     """
     rf = receiptFormat()
     # a dictionary of name(s) and sum of amount
@@ -307,3 +321,101 @@ def total_calculator(description, receipt_input, fees_input, tax_input, tip_inpu
     total_value = round(precheck_sum+tax_input+tip_input+fees_input+discount+contribution,2) # prefill the total
     total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
     return total_input, data
+
+def html_table(link_output, request_money):
+    '''
+    Presents name, amount, and custom venmo link in a sweet table
+    ASCII table source: http://www.asciitable.com/
+    Use Hx column, add a % before it
+    '''
+    link_type = st.selectbox("Request payments yourself, or send payme links to your friends", options=['Request them', 'Pay me'])
+    
+    html_table_header = '''
+    <table class="tg">
+    '''
+    html_table_end = '''</tr>
+    </tbody>
+    </table>'''
+    
+    html_table_data = f'''<tbody>'''    
+    venmo_logo = 'https://raw.githubusercontent.com/pomkos/payme/main/images/venmo_logo_blue.png'
+    
+    copy_me = ''
+    for key in link_output.keys():
+        # append each person's rows to html table 
+        html_row = f'''
+        <tr>
+            <td class="tg-0pky">{key}<br></td>
+            <td class="tg-0pky">${request_money[key][0]}</td>
+            <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
+        </tr>'''
+        html_table_data += html_row
+        
+        copy_str = f"""**{key}**: {link_output[key]} \n"""
+        copy_me += copy_str
+    html_table_all = html_table_header + html_table_data + html_table_end
+    
+    # get the request links
+    if "request" in link_type.lower():
+        st.write(html_table_all, unsafe_allow_html=True)
+        copy_to_clipboard(copy_me) # copy button
+        
+    # get the pay links
+    else:
+        html_table_all = html_table_all.replace("charge","pay")
+
+        copy_me = copy_me.replace("charge","pay")
+
+        st.write(html_table_all, unsafe_allow_html=True)
+        copy_to_clipboard(copy_me) # copy button
+
+def copy_to_clipboard(text):
+    '''
+    Copies anything in the textbox to clipboard.
+    '''
+    import streamlit as st
+    from bokeh.models.widgets import Button
+    from bokeh.models import CustomJS
+    from streamlit_bokeh_events import streamlit_bokeh_events
+    from io import StringIO
+    import pandas as pd
+    import js2py
+    import streamlit.components.v1 as components
+    
+    # button styling, function. Textarea content, location.
+    input_ =f'''<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    
+    <button class="btn btn-outline-info" onclick="myFunction()">Copy</button>
+    
+    <div>
+    <textarea id="myInput" cols=28 style="position:absolute; left: -10000px;">{text}</textarea>
+    </div>
+    '''
+    
+    # f string so links can be added to textbox
+    html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
+                        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
+                        crossorigin="anonymous"></script> 
+                        {input_}
+                    """
+    
+    # second part of html code, brackets wont allow it to be part of fstring
+    html_second = """
+    <SCRIPT LANGUAGE="JavaScript">
+    function myFunction(){
+    var copyText = document.getElementById("myInput");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); 
+    document.execCommand("copy");
+    }
+    </SCRIPT>
+    """
+    # add strings together to get full html code
+    html_all = html_first + html_second
+    # pass it to components.html
+    html_code = components.html(html_all, height=50)
+    # add to page
+    
+    html_code

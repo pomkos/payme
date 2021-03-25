@@ -23,31 +23,6 @@ def name_maker(my_names, receipt):
     names += ['subtotal','tax','delivery','discount','service','tip','total']
     names = tuple(names)
     return names, only_names
-
-def ocr_parser(names_dict, names_str_items, only_names):
-    '''
-    Starts where receipt_formatter left off to make sense of ocr data
-    '''
-    import numpy as np
-
-    # Get number of items per person
-    num_items = {}
-    for person in names_dict.keys():
-        if person in only_names:
-            items = names_str_items[person].replace('',np.nan)
-            items = items.dropna()
-            num_items[person] = len(items[items.str.contains('\d\d?')]) # if a row contains a digit, that should be the number of meals bought
-        else: # its not a name, but fee or total
-            num_items[person] = 1
-    prices = names_str_items['total'].str.extract("\$(\d\d?\d?.+)")
-    prices = prices.dropna().reset_index(drop=True)
-    names_prices = {}
-    for person in names_dict.keys():
-        items = num_items[person]
-        names_prices[person] = list(pd.to_numeric(prices.loc[:items-1][0]))
-        prices = prices.loc[items:].reset_index(drop=True)
-    
-    return names_prices
     
 def receipt_formatter(receipt, names, only_names, ocr=False):
     '''
@@ -95,6 +70,29 @@ def receipt_formatter(receipt, names, only_names, ocr=False):
         if 'discount' in names_prices.keys(): # doesn't always appear on receipts
             names_prices['discount'] = [names_prices['discount'][0] * -1] # multiply by -1 cuz discount
         return names_prices
+    
+def ocr_parser(names_dict, names_str_items, only_names):
+    '''
+    Starts where receipt_formatter left off to make sense of ocr data
+    '''
+    # Get number of items per person
+    num_items = {}
+    for person in names_dict.keys():
+        if person in only_names:
+            items = names_str_items[person].replace('',np.nan)
+            items = items.dropna()
+            num_items[person] = len(items[items.str.contains('\d\d?')]) # if a row contains a digit, that should be the number of meals bought
+        else: # its not a name, but fee or total
+            num_items[person] = 1
+    prices = names_str_items['total'].str.extract("\$(\d\d?\d?.+)")
+    prices = prices.dropna().reset_index(drop=True)
+    names_prices = {}
+    for person in names_dict.keys():
+        items = num_items[person]
+        names_prices[person] = list(pd.to_numeric(prices.loc[:items-1][0]))
+        prices = prices.loc[items:].reset_index(drop=True)
+    
+    return names_prices
 
 def sanity_check(names_prices):
     '''
@@ -185,8 +183,6 @@ def app(receipt, my_names, description):
     '''
     Thalamus of doordash parser
     '''
-    import base64
-
     if not receipt:
         st.stop()
     if not my_names:
