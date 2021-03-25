@@ -307,3 +307,103 @@ def total_calculator(description, receipt_input, fees_input, tax_input, tip_inpu
     total_value = round(precheck_sum+tax_input+tip_input+fees_input+discount+contribution,2) # prefill the total
     total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
     return total_input, data
+
+def html_table(link_output, request_money):
+    '''
+    Presents name, amount, and custom venmo link in a sweet table
+    ASCII table source: http://www.asciitable.com/
+    Use Hx column, add a % before it
+    '''
+    link_type = st.selectbox("Request payments yourself, or send payme links to your friends", options=['Request them', 'Pay me'])
+    
+    html_table_header = '''
+    <table class="tg">
+    '''
+    html_table_end = '''</tr>
+    </tbody>
+    </table>'''
+    
+    html_table_data = f'''<tbody>'''    
+    venmo_logo = 'https://raw.githubusercontent.com/pomkos/payme/main/images/venmo_logo_blue.png'
+    
+    copy_me = ''
+    for key in link_output.keys():
+        # append each person's rows to html table 
+        html_row = f'''
+        <tr>
+            <td class="tg-0pky">{key}<br></td>
+            <td class="tg-0pky">${request_money[key][0]}</td>
+            <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
+        </tr>'''
+        html_table_data += html_row
+        
+        copy_str = f"""**{key}**: {link_output[key]} \n"""
+        copy_me += copy_str
+    html_table_all = html_table_header + html_table_data + html_table_end
+    
+    # get the request links
+    if "request" in link_type.lower():
+        st.write(html_table_all, unsafe_allow_html=True)
+        copy_to_clipboard(copy_me) # copy button
+    # get the pay links
+    else:
+        # v_user = st.text_input("Your venmo username")  # didnt wanna dig into code, but this doesn't work
+        #v_user = ''
+        #if v_user:
+        html_table_all = html_table_all.replace("charge","pay")
+
+        copy_me = copy_me.replace("charge","pay")
+
+        st.write(html_table_all, unsafe_allow_html=True)
+        copy_to_clipboard(copy_me) # copy button
+
+def copy_to_clipboard(text):
+    '''
+    Copies anything in the textbox to clipboard.
+    '''
+    import streamlit as st
+    from bokeh.models.widgets import Button
+    from bokeh.models import CustomJS
+    from streamlit_bokeh_events import streamlit_bokeh_events
+    from io import StringIO
+    import pandas as pd
+    import js2py
+    import streamlit.components.v1 as components
+    
+    # button styling, function. Textarea content, location.
+    input_ =f'''<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    
+    <button class="btn btn-outline-info" onclick="myFunction()">Copy</button>
+    
+    <div>
+    <textarea id="myInput" cols=28 style="position:absolute; left: -10000px;">{text}</textarea>
+    </div>
+    '''
+    
+    # f string so links can be added to textbox
+    html_first = f"""<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
+                        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
+                        crossorigin="anonymous"></script> 
+                        {input_}
+                    """
+    
+    # second part of html code, brackets wont allow it to be part of fstring
+    html_second = """
+    <SCRIPT LANGUAGE="JavaScript">
+    function myFunction(){
+    var copyText = document.getElementById("myInput");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); 
+    document.execCommand("copy");
+    }
+    </SCRIPT>
+    """
+    # add strings together to get full html code
+    html_all = html_first + html_second
+    # pass it to components.html
+    html_code = components.html(html_all, height=50)
+    # add to page
+    
+    html_code
