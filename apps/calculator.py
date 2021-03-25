@@ -1,15 +1,28 @@
 # content creator, including price splitting, text formatting, message creating
 
 import streamlit as st
-import pandas as pd
-import numpy as np
 import re
-import sys
 
 def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount):
     '''
     Converts from local currency to USD
+    
+    input
+    -----
+    my_dic: dict
+        Dictionary of name: prices
+    total: float
+    tax: float
+    tip: float
+    misc_fees: float
+    contribution: float
+    discount: float
+    
+    return
+    ------
+    All of the above, but with converted currency
     '''
+    # Get currency info
     from apps import db_tool
     c = db_tool.getCurrency()
     df = c.df
@@ -18,6 +31,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
     usd_convert = list(df[df['country']==ctry]['rate'])[0] # get rate from db
     symbol = list(df[df['country']==ctry]['code'])[0]
     
+    # Convert prices
     for name, price in my_dic.items():
         my_dic[name] = price/usd_convert
     discount = discount/usd_convert
@@ -27,7 +41,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
     misc_fees = misc_fees/usd_convert
     contribution = contribution/usd_convert
     
-    
+    # To construct webgui info
     date = df['date_updated'][0].date()
     usd_convert_type = f'{round(usd_convert,2)} {symbol}'
     convert_info = [usd_convert_type, date]
@@ -36,7 +50,7 @@ def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discoun
 
     
 
-def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0, convert=False, contribution=0, clean=False):
+def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0, convert=False, contribution=0):
     """
     Returns lump sums to request using venmo
 
@@ -73,12 +87,15 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         -------------------
     """
     total = round(total,2) # otherwise get weird 23.00000005 raw totals
+    
     ###### Currency to USD conversion ######
     convert = st.checkbox("Convert to USD") # ask if MXD or USD is required
     if convert:
         my_dic, total, tax, tip, misc_fees, discount, contribution, usd_convert = currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount)
     ########################################
+    
     precheck_sum = round(sum(my_dic.values())+tax+tip+misc_fees+discount+contribution,2)
+    # Just a quick precheck to make sure manual input was correct
     if total != precheck_sum:
         st.error(f"You provided {total} as the total, but I calculated {precheck_sum}")
         st.stop()
@@ -101,6 +118,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             person_total = my_total + tax_part + fee_part + tip_part + disc_part + store_part
             rounded_sum += person_total
             request[key] = person_total
+            
         ### Dynamically explain the calculation for transparency ###
         formula = """
 1. Each person's sum was calculated using: $m_t = d_s"""
@@ -187,7 +205,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         from apps import manual_mode as mm
         # get dictionary of name:message
 
-        # gather variables
+        # gather variables for **kwarg
         for_messages = {
             'description':description,
             'request':request_money,
@@ -198,7 +216,6 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
             'fee_part':fee_part,
             'misc_fees':misc_fees,
             'disc_part':disc_part,
-            'clean_message':clean, # not sure what this is...
             'convert':convert
         }
         if convert:
@@ -210,7 +227,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
                 "messages":messages}       
         return data
     
-def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,misc_fees,disc_part, store_perc, convert, convert_info='', clean_message=False):
+def venmo_message_maker(description,request,my_dic,tip_perc,tax_perc,fee_part,misc_fees,disc_part, store_perc, convert, convert_info=''):
     '''
     Generates a message or link that directs user to venmo app with prefilled options
     '''
@@ -249,14 +266,11 @@ Made with ❤️ at payme.peti.work''' # %0A creates a new line
         message_output[key] = statement # stores message only, no venmo link
         
         # "&not" gets converted to a weird notation, not interpreted by ios. Use "&amp;" to escape the ampersand
-        # took out recipients={key}&amp; so recipients dont get autofilled
+        # took out recipients={key}&amp; so recipients dont get autofilled. Doesn't work in iOS or Android.
         link = f"https://venmo.com/?txn={txn}&amp;audience={audience}&amp;amount={amount[0]}&amp;note={statement}"
         link_output[key] = link
 
-    if clean_message:
-        return message_output
-    else:
-        return link_output
+    return link_output
     
 class receiptFormat():
     # Receipt formatting
@@ -287,7 +301,7 @@ class receiptFormat():
 
 def total_calculator(description, receipt_input, fees_input, tax_input, tip_input, discount, contribution=0):
     """
-    Calculates the total amount spent using all variables. Separated function so we can take account for params
+    Calculates the total amount spent using all variables. Separated function so we can take account for params in future
     """
     rf = receiptFormat()
     # a dictionary of name(s) and sum of amount
@@ -345,11 +359,9 @@ def html_table(link_output, request_money):
     if "request" in link_type.lower():
         st.write(html_table_all, unsafe_allow_html=True)
         copy_to_clipboard(copy_me) # copy button
+        
     # get the pay links
     else:
-        # v_user = st.text_input("Your venmo username")  # didnt wanna dig into code, but this doesn't work
-        #v_user = ''
-        #if v_user:
         html_table_all = html_table_all.replace("charge","pay")
 
         copy_me = copy_me.replace("charge","pay")

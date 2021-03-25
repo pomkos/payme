@@ -49,7 +49,7 @@ def start():
         'my_dic':data
     }
     try:
-        calc_message = calc.venmo_calc(**user_modified, clean=False)
+        calc_message = calc.venmo_calc(**user_modified)
         calc.html_table(calc_message["messages"], calc_message["request_money"])
 
     except ZeroDivisionError:
