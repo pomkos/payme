@@ -22,7 +22,7 @@ footer {visibility: hidden;}
 
 """
 st.set_page_config(page_title = 'Venmo Calculator')
-st.markdown(hide_streamlit_style, unsafe_allow_html=True) # hides the hamburger menu
+# st.markdown(hide_streamlit_style, unsafe_allow_html=True) # hides the hamburger menu
 
 def start():
     '''
