@@ -2,21 +2,18 @@ import streamlit as st
 import pandas as pd
 
 # GUI for manual input option
-def manual_input(gui, params):
+def manual_input(gui):
     '''
     Thalamus. Redirects to doordash, ubereats, or manual input
     '''
-    if params:
-        total_inputp, datap, tax_inputp, fees_inputp, tip_inputp, sharep = params
-        
-    else:
-        total_inputp=0.0
-        datap=''
-        describep=''
-        tax_inputp=0.0
-        fees_inputp=0.0
-        tip_inputp=0.0
-        sharep=False
+    
+    total_inputp=0.0
+    datap=''
+    describep=''
+    tax_inputp=0.0
+    fees_inputp=0.0
+    tip_inputp=0.0
+    sharep=False
         
     if "delivery" in gui.lower():
         return delivery_mode()
