@@ -107,7 +107,7 @@ def info_gather(names, meals):
     with colo:
         order = st.selectbox("Select an order", options=meals)
     with cola:
-        amount = st.number_input("How much? (Ex: 1, 2, 0.5)")
+        amount = st.number_input("How much? (Ex: 1, 2, 0.5)", step=1.0)
     
     return name, order, amount
 
