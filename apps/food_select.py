@@ -6,6 +6,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import sqlalchemy as sq
+import streamlit_analytics
 
 st.title("Russian Bistro")
 engine = sq.create_engine("sqlite:///data/food.db")
@@ -61,7 +62,7 @@ except:
             "total_item_price": [5.99 * 2],
         }
     )
-
+streamlit_analytics.start_tracking()
 def name_chooser():
     '''
     Eliminates names that already occurred in the db
@@ -169,3 +170,4 @@ if submit:
         st.success("Saved to db!")
     except:
         st.error("Couldn't save to db, tell Pete")
+streamlit_analytics.stop_tracking()
