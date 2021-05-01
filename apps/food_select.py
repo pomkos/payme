@@ -18,7 +18,7 @@ with st.beta_expander("How to"):
     1. Choose a food item
     1. Enter how many of that meal you had.
     1. Use fractions to indicate shared orders. 0.33 if split by three, 0.5 if split by two, etc.
-    1. Click `Calculate`. If everything looks good click `Confirm and Submit`
+    1. If everything looks good click `Confirm and Submit`
     """)
 
 # dictionary where keys are the food, values are a list of [price, num_ordered]
