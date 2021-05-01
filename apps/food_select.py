@@ -106,8 +106,9 @@ def info_gather(names, meals):
     colo, cola = st.beta_columns(2)
     with colo:
         order = st.selectbox("Select an order", options=meals)
+    num_item = food_dict[order.lower()][1]
     with cola:
-        amount = st.number_input("How much? (Ex: 1, 2, 0.5)", step=1.0)
+        amount = st.number_input("How much? (Ex: 1, 2, 0.5)", step=1.0, max_value=num_item)
     
     return name, order, amount
 
