@@ -37,8 +37,8 @@ food_dict = {
     "drink: martini infused + apple and cinnamon (1)": [12, 1],
     "dessert: halva (4)": [4.5, 4],
     "dessert: kiev cake (1)": [8, 1],
-    "dessert: napoleon cake (1)": [1,1],
-    "dessert: medovik cake (1)": [1,1]
+    "dessert: napoleon cake (1)": [7,1],
+    "dessert: medovik cake (1)": [8,1]
 }
 
 subtotal = 378.99
