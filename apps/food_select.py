@@ -11,6 +11,16 @@ st.title("Russian Bistro")
 engine = sq.create_engine("sqlite:///data/food.db")
 cnx = engine.connect()
 
+with st.beta_expander("How to"):
+    st.write("""
+    * Choose name
+    * Choose all meals you had
+    * Enter how many of each meal you had separated by commas.
+        Ex: `1,2,0.5`
+    * Use fractions to indicate shared orders. 0.33 if split by three, 0.5 if split by two, etc.
+    * Click `Calculate`. If everything looks good click `Confirm and Submit`
+    """)
+
 # dictionary where keys are the food, values are a list of [price, num_ordered]
 food_dict = {
     "infused shot (13)": [6, 13],
