@@ -38,8 +38,8 @@ class labelFood:
             "Choose a receipt!", options=labels, format_func=self.format_labels
         )
         # dictionary where keys are the food, values are a list of [price, num_ordered]
-        data2 = data[data["name"] == selected]
-        food_dict = self.food_df_to_dict(data2)
+        data2 = data[data["name"] == selected] # filter to selected receipt
+        food_dict, names_list = self.food_df_to_dict(data2)
         try:
             df_saved = pd.read_sql("food", cnx)
         except:
@@ -54,8 +54,15 @@ class labelFood:
                     "label": ["test_05-02"],
                 }
             )
-        names = self.name_chooser(df_saved)
+        names = self.name_chooser(df_saved, names_list)
         meals = self.meal_chooser(df_saved, food_dict)
+        if not meals:
+            # if no meals in the list, then we're done. Just show the df.
+            st.info("All meals have been claimed! Copy paste the below into payme to get venmo links.")
+            results = pd.read_sql("food", con=cnx)
+            results = results[results['label'] == selected]
+            self.results_formatter(results)
+            st.stop()
         name, order, amount = self.info_gather(names, meals, df_saved, food_dict)
         self.ph_info = st.empty()
         self.ph_table = st.empty()
@@ -90,14 +97,15 @@ class labelFood:
         my_dict = {}
         new_df = dataframe.groupby("item").sum()
         for item in new_df.index:
-            my_dict[item] = [new_df.loc[item, "price"], new_df.loc[item, "amount"]]
-        return my_dict
+            my_dict[item.lower()] = [new_df.loc[item, "price"], new_df.loc[item, "amount"]]
+        names_list_dirty = dataframe['people'].unique()[0].split(',')
+        names_list = [name.strip() for name in names_list_dirty]
+        return my_dict, names_list
 
-    def name_chooser(self, df_saved):
+    def name_chooser(self, df_saved, all_names):
         """
         Eliminates names that already occurred in the db
         """
-        all_names = ["Peter", "Matt", "Steve", "Aron", "Julie", "Grace", "Russell"]
         # theres a bug where removing the name from names when names is the iteree,
         #
         names = []
@@ -216,6 +224,33 @@ class labelFood:
             st.success("Saved to db!")
         except:
             st.error("Couldn't save to db, tell Pete")
+            
+    def results_formatter(self, results):
+        '''
+        Formats the results so they can be directly copied into payme manual mode.
+        '''
+        names = results['name'].unique()
+        
+        results_dict = {}
+        for i, row in results.iterrows():
+            name = row['name']
+            total_item_price = row['total_item_price']
+            
+            if name in results_dict.keys():
+                results_dict[name].append(total_item_price)
+            else:
+                results_dict[name] = [total_item_price]
+        
+        results_str = ''
+        for key in results_dict.keys():
+            line = f'{key}:'
+            for price in results_dict[key]:
+                line += f' {price}'
+            results_str += f'''
+{line}'''
+        st.code(results_str)
+        
+        st.table(results)
 
 
 ###################
@@ -254,7 +289,8 @@ class receiptReceiver:
 
         df = self.detail_meals(receipt)
         df = self.add_fees(df)
-        self.save_df(df)
+        names_lst = self.add_users()
+        self.save_df(df, names_lst)
 
     def detail_meals(self, receipt):
         """
@@ -308,18 +344,28 @@ class receiptReceiver:
         )
 
         return dataframe
+    
+    def add_users(self):
+        '''
+        Asks payer to add everyone who was in the group during meal time
+        '''
+        st.info("Step 3. Add everyone (including yourself!) who is sharing the costs.")
+        everyone_str = st.text_input("Add names, separated by a comma (Ex: Russ, Fuss, Muss)")
+        if not everyone_str:
+            st.stop()
+        return everyone_str
 
-    def save_df(self, dataframe):
+    def save_df(self, dataframe, names_lst):
         """
         Saves user created info
         """
         import datetime as dt
 
-        st.info("Step 3. Tag, review, and save!")
+        st.info("Step 4. Tag, review, and save!")
         label = st.text_input("Give a name to the receipt")
+        label = label + "_" + str(dt.datetime.now().date())[5:]        
         dataframe["name"] = label
-
-        dataframe["name"] = dataframe["name"] + "_" + str(dt.datetime.now().date())[5:]
+        dataframe['people'] = str(names_lst) # sqlite does not support storing lists in cells
         st.table(dataframe)
         if not st.button("Save to Database"):
             st.stop()
@@ -328,9 +374,12 @@ class receiptReceiver:
 
         try:
             old_df = pd.read_sql("receipt", con=cnx)
+            if label in old_df['name'].unique():
+                label2 = label + "_new"
+                dataframe['name'] = label2
             dataframe = dataframe.append(old_df)
             dataframe.to_sql("receipt", con=cnx, index=False, if_exists="replace")
-            st.success("Saved!")
         except:
             dataframe.to_sql("receipt", con=cnx, index=False, if_exists="replace")
-            st.success("Saved!")
+            
+        st.success("Step 5. Saved! Let everyone know it's time to claim their meals!")

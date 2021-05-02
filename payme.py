@@ -36,7 +36,7 @@ def start():
     if action == "Get venmo links":
         select_input = "release"  # disabled user section of payme ('alpha' to activate)
         service_chosen = st.sidebar.radio(
-            "Choose input type", options=["Delivery App", "Manual Mode"]
+            "Choose input type", options=["Manual Mode", "Delivery App"]
         )
 
         if "Manual" not in service_chosen:
