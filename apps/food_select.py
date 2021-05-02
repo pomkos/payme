@@ -109,7 +109,7 @@ def info_gather(names, meals):
         order = st.selectbox("Select an order", options=meals)
     num_item = float(food_dict[order.lower()][1])
     with cola:
-        amount = st.number_input("How much? (Ex: 1, 2, 0.5)", step=1.0, max_value=num_item, min_value=0.0)
+        amount = st.number_input("How many? (Ex: 1, 2, 0.5)", step=1.0, max_value=num_item, min_value=0.0)
     
     return name, order, amount
 
