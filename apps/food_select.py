@@ -20,7 +20,7 @@ class labelFood:
         try:
             data = pd.read_sql("receipt", con=cnx)
         except:
-            st.error("No receipt submit. Have the payer add the receipt first!")
+            st.error("No receipt submitted. Have the payer add the receipt first!")
             st.stop()
         with st.beta_expander("How to"):
             st.write(
@@ -37,6 +37,8 @@ class labelFood:
         selected = st.selectbox(
             "Choose a receipt!", options=labels, format_func=self.format_labels
         )
+        show = st.checkbox("Show me everyone's submission")
+
         # dictionary where keys are the food, values are a list of [price, num_ordered]
         data2 = data[data["name"] == selected] # filter to selected receipt
         food_dict, names_list = self.food_df_to_dict(data2)
@@ -54,13 +56,15 @@ class labelFood:
                     "label": ["test_05-02"],
                 }
             )
+        if show:
+            st.table(df_saved[df_saved['label']==selected])
+            st.stop()
         names = self.name_chooser(df_saved, names_list)
         meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
             # if no meals in the list, then we're done. Just show the df.
             st.info("All meals have been claimed! Copy paste the below into payme to get venmo links.")
-            results = pd.read_sql("food", con=cnx)
-            results = results[results['label'] == selected]
+            results = df_saved[df_saved['label'] == selected]
             self.results_formatter(results)
             st.stop()
         name, order, amount = self.info_gather(names, meals, df_saved, food_dict)
@@ -72,15 +76,16 @@ class labelFood:
                 "Step 1: Select the meal you ordered or shared, and write the amount of each. If shared, use fractions."
             )
             with self.ph_table.beta_container():
-                st.write("__Current Database__")
-                st.table(df_saved)
+                st.write("__Your Submissions__")
+                user_table = df_saved[(df_saved['label']==selected) & (df_saved['name']==name)]
+                st.table(user_table)
             st.stop()
 
         self.ph_info.info("Step 2: Review your selection, then submit the data.")
         receipt_df = self.user_choose_meal(amount, order, name, food_dict)
         # add to db
         if st.button("Confirm and Submit"):
-            self.save_to_db(receipt_df, df_saved, selected)
+            self.save_to_db(receipt_df, df_saved, selected, name)
 
     def format_labels(self, label):
         """
@@ -210,7 +215,7 @@ class labelFood:
 
         return user_total, subtotal, tip, tip_perc, sales_tax_perc
 
-    def save_to_db(self, receipt_df, df_saved, receipt_name):
+    def save_to_db(self, receipt_df, df_saved, receipt_name,name):
         """
         Allows user to submit and save to db
         """
@@ -218,7 +223,8 @@ class labelFood:
             receipt_df["label"] = receipt_name
             df_saved = df_saved.append(receipt_df)
             with self.ph_table.beta_container():
-                st.write("__New Database__")
+                st.write("__Your Submissions__")
+                user_table = df_saved[(df_saved['name']==name) & df_saved['label']==receipt_name]
                 st.table(df_saved)
             df_saved.to_sql("food", cnx, if_exists="replace", index=False)
             st.success("Saved to db!")
