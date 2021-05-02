@@ -24,6 +24,12 @@ footer {visibility: hidden;}
 st.set_page_config(page_title = 'Venmo Calculator')
 # st.markdown(hide_streamlit_style, unsafe_allow_html=True) # hides the hamburger menu
 
+import streamlit_analytics
+
+with streamlit_analytics.track():
+    st.text_input("Write something")
+    st.button("Click me")
+
 def start():
     '''
     Thalamus. Creates the GUI and redirects requests to the appropriate scripts. The Thalamus.
