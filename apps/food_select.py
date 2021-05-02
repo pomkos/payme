@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sq
 
-engine = sq.create_engine("sqlite:///data/food.db")
+engine = sq.create_engine("sqlite:///data/food.db", connect_args={"check_same_thread":False})
 cnx = engine.connect()
 
 ###################
