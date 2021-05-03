@@ -63,7 +63,7 @@ class labelFood:
         meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
             # if no meals in the list, then we're done. Just show the df.
-            st.info("All meals have been claimed! Copy paste the below into payme to get venmo links.")
+            st.success("All meals have been claimed! Copy paste the below into Manual Mode to get venmo links.")
             results = df_saved[df_saved['label'] == selected]
             self.results_formatter(results)
             st.stop()
@@ -73,7 +73,7 @@ class labelFood:
 
         if not amount or not order or not name:
             self.ph_info.info(
-                "Step 1: Select the meal you ordered or shared, and write the amount of each. If shared, use fractions."
+                "Step 1. Select the meal you ordered or shared, and write the amount of each. If shared, use fractions."
             )
             with self.ph_table.beta_container():
                 st.write("__Your Submissions__")
@@ -81,7 +81,7 @@ class labelFood:
                 st.table(user_table)
             st.stop()
 
-        self.ph_info.info("Step 2: Review your selection, then submit the data.")
+        self.ph_info.info("Step 2. Review your selection, then submit the data.")
         receipt_df = self.user_choose_meal(amount, order, name, food_dict)
         # add to db
         if st.button("Confirm and Submit"):
