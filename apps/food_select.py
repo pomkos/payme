@@ -222,12 +222,9 @@ class labelFood:
         try:
             receipt_df["label"] = receipt_name
             df_saved = df_saved.append(receipt_df)
-            with self.ph_table.beta_container():
-                st.write("__Your Submissions__")
-                user_table = df_saved[(df_saved['name']==name) & df_saved['label']==receipt_name]
-                st.table(df_saved)
             df_saved.to_sql("food", cnx, if_exists="replace", index=False)
             st.success("Saved to db!")
+
         except:
             st.error("Couldn't save to db, tell Pete")
             
