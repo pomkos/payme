@@ -97,7 +97,7 @@ class labelFood:
 
     def food_df_to_dict(self, dataframe):
         """
-        Creates a dictionary out of a dataframe, with the "item" column as keys
+        Creates a dictionary out of receipt dataframe, with the "item" column as keys
         """
         my_dict = {}
         new_df = dataframe.groupby("item").sum()
@@ -111,8 +111,6 @@ class labelFood:
         """
         Eliminates names that already occurred in the db
         """
-        # theres a bug where removing the name from names when names is the iteree,
-        #
         names = []
         # remove names and meals from options if already in db
         for name in all_names:
