@@ -67,7 +67,7 @@ class labelFood:
             results = df_saved[df_saved['label'] == selected]
             self.results_formatter(results)
             st.stop()
-        name, order, amount = self.info_gather(names, meals, df_saved, food_dict)
+        name, order, amount = self.info_gather(names, meals, df_saved, food_dict, selected)
         self.ph_info = st.empty()
         self.ph_table = st.empty()
 
@@ -141,7 +141,7 @@ class labelFood:
         meals.sort()
         return meals
 
-    def info_gather(self, names, meals, df_saved, food_dict):
+    def info_gather(self, names, meals, df_saved, food_dict, receipt_name):
         """
         Gathers info from user
         """
@@ -151,9 +151,16 @@ class labelFood:
         with colo:
             order = st.selectbox("Select an order", options=meals)
         num_item = float(food_dict[order.lower()][1])
+        receipt_df = df_saved[(df_saved['label'] == receipt_name)]
+        receipt_grpd = receipt_df.groupby('food').sum()
+        try:
+            amt_order_recorded = receipt_grpd.loc[order,'amount']
+        except:
+            amt_order_recorded = 0.0
+        
         with cola:
             amount = st.number_input(
-                "How many? (Ex: 1, 2, 0.5)", step=1.0, max_value=num_item, min_value=0.0
+                f"How many? (Can claim up to: {num_item - amt_order_recorded})", step=1.0, max_value=num_item - amt_order_recorded, min_value=0.0
             )
 
         return name, order, amount
