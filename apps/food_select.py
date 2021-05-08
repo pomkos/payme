@@ -249,6 +249,7 @@ class labelFood:
                 results_dict[name].append(total_item_price)
             else:
                 results_dict[name] = [total_item_price]
+        results_dict['---DO NOT DELETE BELOW---'] = []
         results_dict['%%tax'] = [receipt_df.loc['tax','price']]
         results_dict['%%tip'] = [receipt_df.loc['tip','price']]
         results_dict['%%fees'] = [receipt_df.loc['fees','price']]
