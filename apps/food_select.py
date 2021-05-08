@@ -278,7 +278,8 @@ class labelFood:
 {line}'''
         st.code(results_str)
         
-        st.table(results)
+        with st.beta_expander("See everyone's claimed meals"):
+            st.table(results)
 
 
 ###################
