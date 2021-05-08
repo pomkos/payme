@@ -25,11 +25,25 @@ class labelFood:
         with st.beta_expander("How to"):
             st.write(
                 """
-            1. Choose name
-            1. Choose a food item
-            1. Enter how many of that meal you had.
-            1. Use fractions to indicate shared orders. 0.33 if split by three, 0.5 if split by two, etc.
-            1. If everything looks good click `Confirm and Submit`
+            __Initial Input:__
+            
+            1. Select receipt
+            1. Choose your name
+            1. Select your order (or an order you shared)
+            1. Add how many you ordered. If order was split with three people, just add your portion (ex: if 33%, enter 0.33)
+            1. Review selection, hit `Confirm and Submit`
+            1. Repeat for each order
+            
+            __Once all Meals are Claimed:__
+            
+            A message will show and below it in a codebox a summary of each person's orders.
+            
+            1. Copy the content of codebox
+            1. In the sidebar click `Get venmo links`
+            1. Paste into `Add name and food prices*`
+            1. Click out of the box
+            1. Scroll down, click copy to get your venmo links
+            
             """
             )
         labels = data["name"].unique()
