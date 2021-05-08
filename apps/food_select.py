@@ -77,7 +77,7 @@ class labelFood:
         meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
             # if no meals in the list, then we're done. Just show the df.
-            st.success("All meals have been claimed! Copy paste the below into Manual Mode to get venmo links.")
+            st.success("All meals have been claimed! Copy paste the below into `Get venmo links` to get venmo links.")
             results = df_saved[df_saved['label'] == selected]
             self.results_formatter(results, data2)
             st.stop()
