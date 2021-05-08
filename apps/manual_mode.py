@@ -84,7 +84,7 @@ def manual_mode():
                 Russell 11.01 15.89 1.99
                 ```
             2. Input the rest of the fees or tips as needed""")
-    description = st.text_input(label="(Optional) Description, like the restaurant name")
+    ph = st.empty() # placeholder for description
     receipt_input = st.text_area(label="Add name and food prices*", height=150)
     
     if '---DO NOT DELETE BELOW---:' in receipt_input:
@@ -95,6 +95,8 @@ def manual_mode():
         tax_val = find_reg_num(receipt_input, 'tax')
         tip_val = find_reg_num(receipt_input, 'tip')
         fees_val = find_reg_num(receipt_input, 'fees')
+        desc_loc = [x for x in re.search('%%description: ', receipt_input).span()]
+        desc_val = receipt_input[desc_loc[1]:] # assume description is very last item in string
         
         # Use regex to find location of added info, then remove it
         # otherwise tax/tip/fees will show up as people in
@@ -106,6 +108,7 @@ def manual_mode():
         tax_val = 0.0
         tip_val = 0.0
         fees_val = 0.0
+    description = ph.text_input(label="(Optional) Description, like the restaurant name", value=desc_val)
     col1, col2 = st.beta_columns(2)
     col3, col4 = st.beta_columns(2)
 

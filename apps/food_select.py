@@ -253,6 +253,7 @@ class labelFood:
         results_dict['%%tax'] = [receipt_df.loc['tax','price']]
         results_dict['%%tip'] = [receipt_df.loc['tip','price']]
         results_dict['%%fees'] = [receipt_df.loc['fees','price']]
+        results_dict['%%description'] = [self.format_labels(receipt_df['name'].iloc[0])]
         
         results_str = ''
         for key in results_dict.keys():
