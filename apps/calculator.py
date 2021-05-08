@@ -379,7 +379,7 @@ def html_table(link_output, request_money):
     
     copy_me = ''
     for key in link_output.keys():
-        link = link_shortener(link_output[key])
+        link = link_output[key]
         # append each person's rows to html table 
         html_row = f'''
         <tr>
@@ -389,7 +389,7 @@ def html_table(link_output, request_money):
         </tr>'''
         html_table_data += html_row
         
-        copy_str = f"""**{key}**: {link} \n"""
+        copy_str = f"""**{key}**: {link_shortener(link)} \n""" # only shorten venmo link for copies, not for table
         copy_me += copy_str
     html_table_all = html_table_header + html_table_data + html_table_end
     
