@@ -51,7 +51,7 @@ class labelFood:
         selected = st.selectbox(
             "Choose a receipt!", options=labels, format_func=self.format_labels
         )
-        show = st.checkbox("Show me everyone's submission")
+        ph_show = st.empty()
 
         # dictionary where keys are the food, values are a list of [price, num_ordered]
         data2 = data[data["name"] == selected] # filter to selected receipt
@@ -70,12 +70,14 @@ class labelFood:
                     "label": ["test_05-02"],
                 }
             )
+        show = ph_show.checkbox("Show me everyone's submission")
         if show:
             st.table(df_saved[df_saved['label']==selected])
             st.stop()
         names = self.name_chooser(df_saved, names_list)
         meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
+            ph_show.empty()
             # if no meals in the list, then we're done. Just show the df.
             st.success("All meals have been claimed! Copy paste the below into `Get venmo links` to get venmo links.")
             results = df_saved[df_saved['label'] == selected]
