@@ -160,7 +160,7 @@ class labelFood:
         
         with cola:
             amount = st.number_input(
-                f"How many? (Can claim up to: {num_item - amt_order_recorded})", step=1.0, max_value=num_item - amt_order_recorded, min_value=0.0
+                f"How many? (Left to claim: {num_item - amt_order_recorded})", step=1.0, max_value=num_item - amt_order_recorded, min_value=0.0
             )
 
         return name, order, amount
