@@ -65,7 +65,7 @@ class labelFood:
             # if no meals in the list, then we're done. Just show the df.
             st.success("All meals have been claimed! Copy paste the below into Manual Mode to get venmo links.")
             results = df_saved[df_saved['label'] == selected]
-            self.results_formatter(results)
+            self.results_formatter(results, data2)
             st.stop()
         name, order, amount = self.info_gather(names, meals, df_saved, food_dict, selected)
         self.ph_info = st.empty()
@@ -233,13 +233,14 @@ class labelFood:
         except:
             st.error("Couldn't save to db, tell Pete")
             
-    def results_formatter(self, results):
+    def results_formatter(self, results, receipt_df):
         '''
         Formats the results so they can be directly copied into payme manual mode.
         '''
-        names = results['name'].unique()
-        
         results_dict = {}
+        receipt_df = receipt_df.set_index('item')
+        # gather info to format
+        
         for i, row in results.iterrows():
             name = row['name']
             total_item_price = row['total_item_price']
@@ -248,6 +249,9 @@ class labelFood:
                 results_dict[name].append(total_item_price)
             else:
                 results_dict[name] = [total_item_price]
+        results_dict['%%tax'] = [receipt_df.loc['tax','price']]
+        results_dict['%%tip'] = [receipt_df.loc['tip','price']]
+        results_dict['%%fees'] = [receipt_df.loc['fees','price']]
         
         results_str = ''
         for key in results_dict.keys():
