@@ -175,9 +175,9 @@ class labelFood:
             amt_order_recorded = 0.0
         
         with cola:
-            amount = st.number_input(
-                f"How many? (Left to claim: {num_item - amt_order_recorded})", step=1.0, max_value=num_item - amt_order_recorded, min_value=0.0
-            )
+            amount = round(st.number_input(
+                f"How many? (Left to claim: {round(num_item - amt_order_recorded,2)})", step=1.0, max_value=round(num_item - amt_order_recorded,2), min_value=0.0
+            ),2)
 
         return name, order, amount
 
@@ -199,7 +199,7 @@ class labelFood:
             }
         )
 
-        receipt_df["total_item_price"] = receipt_df["amount"] * receipt_df["price"]
+        receipt_df["total_item_price"] = round(receipt_df["amount"] * receipt_df["price"],2)
 
         # calculate and present user's taxes, tips, subtotal, total
         user_subtotal = sum(receipt_df["total_item_price"])
