@@ -265,7 +265,7 @@ Your total '''
 Everything was converted as 1 USD = {convert_info[0]}"""
         statement += f'''.
         
-Made with ❤️ at payme.peti.work''' # %0A creates a new line
+Made with ❤️ at payme''' # %0A creates a new line
         statement = urllib.parse.quote(statement)
         message_output[key] = statement # stores message only, no venmo link
         
