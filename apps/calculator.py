@@ -2,6 +2,10 @@
 
 import streamlit as st
 import re
+import requests as r # for rebrandly api
+import json # for rebrandly api
+import pandas as pd
+
 
 def currency_converter(my_dic, total, tax, tip, misc_fees, contribution, discount):
     '''
@@ -261,7 +265,7 @@ Your total '''
 Everything was converted as 1 USD = {convert_info[0]}"""
         statement += f'''.
         
-Made with ❤️ at payme.peti.work''' # %0A creates a new line
+Made with ❤️ at payme''' # %0A creates a new line
         statement = urllib.parse.quote(statement)
         message_output[key] = statement # stores message only, no venmo link
         
@@ -322,6 +326,39 @@ def total_calculator(description, receipt_input, fees_input, tax_input, tip_inpu
     total_input = st.number_input("Calculated Total*",step=10.0,value=total_value)
     return total_input, data
 
+
+def link_shortener(my_string):
+    '''
+    Shortens links using the rebrandly api
+    '''
+    try:
+        access_token = pd.read_csv('data/secret.csv').iloc[0,0]
+    except:
+        st.error("Tell Pete to import the rebrandly secrets")
+        return my_string
+    
+    linkRequest = {
+      "destination": f"{my_string}"
+      , "domain": { "fullName": "clickme.peti.work" }
+    }
+
+    requestHeaders = {
+      "Content-type": "application/json",
+      "apikey": f"{access_token}",
+    }
+
+    response = r.post("https://api.rebrandly.com/v1/links", 
+        data = json.dumps(linkRequest),
+        headers=requestHeaders)
+
+    if (response.status_code == r.codes.ok):
+        short_link = response.json()['shortUrl']
+        return short_link
+    else:
+        st.error("Tell Pete to update the rebrandly secrets")
+        st.error(response.status_code)
+        return my_string
+
 def html_table(link_output, request_money):
     '''
     Presents name, amount, and custom venmo link in a sweet table
@@ -342,16 +379,17 @@ def html_table(link_output, request_money):
     
     copy_me = ''
     for key in link_output.keys():
+        link = link_output[key]
         # append each person's rows to html table 
         html_row = f'''
         <tr>
             <td class="tg-0pky">{key}<br></td>
             <td class="tg-0pky">${request_money[key][0]}</td>
-            <td class="tg-0pky"><a href="{link_output[key]}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
+            <td class="tg-0pky"><a href="{link}" target="_blank" rel="noopener noreferrer"><img src="{venmo_logo}" width="60" ></a><br></td>
         </tr>'''
         html_table_data += html_row
         
-        copy_str = f"""**{key}**: {link_output[key]} \n"""
+        copy_str = f"""**{key}**: {link} \n""" # only shorten venmo link for copies, not for table
         copy_me += copy_str
     html_table_all = html_table_header + html_table_data + html_table_end
     

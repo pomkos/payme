@@ -1,6 +1,7 @@
 # secrets
 secret.py
 secrets.py
+secret.csv
 
 # temp files
 *.out

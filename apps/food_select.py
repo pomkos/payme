@@ -25,11 +25,25 @@ class labelFood:
         with st.beta_expander("How to"):
             st.write(
                 """
-            1. Choose name
-            1. Choose a food item
-            1. Enter how many of that meal you had.
-            1. Use fractions to indicate shared orders. 0.33 if split by three, 0.5 if split by two, etc.
-            1. If everything looks good click `Confirm and Submit`
+            __Initial Input:__
+            
+            1. Select receipt
+            1. Choose your name
+            1. Select your order (or an order you shared)
+            1. Add how many you ordered. If order was split with three people, just add your portion (ex: if 33%, enter 0.33)
+            1. Review selection, hit `Confirm and Submit`
+            1. Repeat for each order
+            
+            __Once all Meals are Claimed:__
+            
+            A message will show and below it in a codebox a summary of each person's orders.
+            
+            1. Copy the content of codebox
+            1. In the sidebar click `Get venmo links`
+            1. Paste into `Add name and food prices*`
+            1. Click out of the box
+            1. Scroll down, click copy to get your venmo links
+            
             """
             )
         labels = data["name"].unique()
@@ -37,7 +51,7 @@ class labelFood:
         selected = st.selectbox(
             "Choose a receipt!", options=labels, format_func=self.format_labels
         )
-        show = st.checkbox("Show me everyone's submission")
+        ph_show = st.empty()
 
         # dictionary where keys are the food, values are a list of [price, num_ordered]
         data2 = data[data["name"] == selected] # filter to selected receipt
@@ -56,18 +70,20 @@ class labelFood:
                     "label": ["test_05-02"],
                 }
             )
+        show = ph_show.checkbox("Show me everyone's submission")
         if show:
             st.table(df_saved[df_saved['label']==selected])
             st.stop()
         names = self.name_chooser(df_saved, names_list)
         meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
+            ph_show.empty()
             # if no meals in the list, then we're done. Just show the df.
-            st.success("All meals have been claimed! Copy paste the below into Manual Mode to get venmo links.")
+            st.success("All meals have been claimed! Copy paste the below into `Get venmo links` to get venmo links.")
             results = df_saved[df_saved['label'] == selected]
-            self.results_formatter(results)
+            self.results_formatter(results, data2)
             st.stop()
-        name, order, amount = self.info_gather(names, meals, df_saved, food_dict)
+        name, order, amount = self.info_gather(names, meals, df_saved, food_dict, selected)
         self.ph_info = st.empty()
         self.ph_table = st.empty()
 
@@ -97,7 +113,7 @@ class labelFood:
 
     def food_df_to_dict(self, dataframe):
         """
-        Creates a dictionary out of a dataframe, with the "item" column as keys
+        Creates a dictionary out of receipt dataframe, with the "item" column as keys
         """
         my_dict = {}
         new_df = dataframe.groupby("item").sum()
@@ -111,8 +127,6 @@ class labelFood:
         """
         Eliminates names that already occurred in the db
         """
-        # theres a bug where removing the name from names when names is the iteree,
-        #
         names = []
         # remove names and meals from options if already in db
         for name in all_names:
@@ -143,7 +157,7 @@ class labelFood:
         meals.sort()
         return meals
 
-    def info_gather(self, names, meals, df_saved, food_dict):
+    def info_gather(self, names, meals, df_saved, food_dict, receipt_name):
         """
         Gathers info from user
         """
@@ -153,10 +167,17 @@ class labelFood:
         with colo:
             order = st.selectbox("Select an order", options=meals)
         num_item = float(food_dict[order.lower()][1])
+        receipt_df = df_saved[(df_saved['label'] == receipt_name)]
+        receipt_grpd = receipt_df.groupby('food').sum()
+        try:
+            amt_order_recorded = receipt_grpd.loc[order,'amount']
+        except:
+            amt_order_recorded = 0.0
+        
         with cola:
-            amount = st.number_input(
-                "How many? (Ex: 1, 2, 0.5)", step=1.0, max_value=num_item, min_value=0.0
-            )
+            amount = round(st.number_input(
+                f"How many? (Left to claim: {round(num_item - amt_order_recorded,2)})", step=1.0, max_value=round(num_item - amt_order_recorded,2), min_value=0.0
+            ),2)
 
         return name, order, amount
 
@@ -178,7 +199,7 @@ class labelFood:
             }
         )
 
-        receipt_df["total_item_price"] = receipt_df["amount"] * receipt_df["price"]
+        receipt_df["total_item_price"] = round(receipt_df["amount"] * receipt_df["price"],2)
 
         # calculate and present user's taxes, tips, subtotal, total
         user_subtotal = sum(receipt_df["total_item_price"])
@@ -222,22 +243,20 @@ class labelFood:
         try:
             receipt_df["label"] = receipt_name
             df_saved = df_saved.append(receipt_df)
-            with self.ph_table.beta_container():
-                st.write("__Your Submissions__")
-                user_table = df_saved[(df_saved['name']==name) & df_saved['label']==receipt_name]
-                st.table(df_saved)
             df_saved.to_sql("food", cnx, if_exists="replace", index=False)
             st.success("Saved to db!")
+
         except:
             st.error("Couldn't save to db, tell Pete")
             
-    def results_formatter(self, results):
+    def results_formatter(self, results, receipt_df):
         '''
         Formats the results so they can be directly copied into payme manual mode.
         '''
-        names = results['name'].unique()
-        
         results_dict = {}
+        receipt_df = receipt_df.set_index('item')
+        # gather info to format
+        
         for i, row in results.iterrows():
             name = row['name']
             total_item_price = row['total_item_price']
@@ -246,6 +265,11 @@ class labelFood:
                 results_dict[name].append(total_item_price)
             else:
                 results_dict[name] = [total_item_price]
+        results_dict['---DO NOT DELETE BELOW---'] = []
+        results_dict['%%tax'] = [receipt_df.loc['tax','price']]
+        results_dict['%%tip'] = [receipt_df.loc['tip','price']]
+        results_dict['%%fees'] = [receipt_df.loc['fees','price']]
+        results_dict['%%description'] = [self.format_labels(receipt_df['name'].iloc[0])]
         
         results_str = ''
         for key in results_dict.keys():
@@ -256,7 +280,8 @@ class labelFood:
 {line}'''
         st.code(results_str)
         
-        st.table(results)
+        with st.beta_expander("See everyone's claimed meals"):
+            st.table(results)
 
 
 ###################
