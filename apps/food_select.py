@@ -391,7 +391,7 @@ class receiptReceiver:
         Saves user created info
         """
         import datetime as dt
-
+        dataframe = dataframe.sort_values('item')
         st.info("Step 4. Tag, review, and save!")
         label = st.text_input("Give a name to the receipt")
         label = label + "_" + str(dt.datetime.now().date())[5:]        
