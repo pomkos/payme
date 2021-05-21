@@ -72,7 +72,9 @@ class labelFood:
             )
         show = ph_show.checkbox("Show me everyone's submission")
         if show:
-            st.table(df_saved[df_saved['label']==selected])
+            show_claims = df_saved[df_saved['label']==selected]
+            show_claims = show_claims.sort_values(['name','food'])
+            st.table(show_claims)
             st.stop()
         names = self.name_chooser(df_saved, names_list)
         meals = self.meal_chooser(df_saved, food_dict)
