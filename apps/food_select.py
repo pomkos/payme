@@ -177,8 +177,9 @@ class labelFood:
             amt_order_recorded = 0.0
         
         with cola:
+            left_to_claim = round(num_item - amt_order_recorded,2)
             amount = round(st.number_input(
-                f"How many? (Left to claim: {round(num_item - amt_order_recorded,2)})", step=1.0, max_value=round(num_item - amt_order_recorded,2), min_value=0.0
+                f"How many? (Left to claim: {left_to_claim})", step=1.0, max_value=left_to_claim, min_value=0.0
             ),2)
 
         return name, order, amount
@@ -330,6 +331,7 @@ class receiptReceiver:
         Extracts costs for each meal
         """
         r_list = receipt.split("\n")
+        
         food_lst = [food.split(":")[0].strip() for food in r_list]
         money_lst = [food.split(":")[1].strip() for food in r_list]
         price_lst = [float(food.split(",")[0].strip()) for food in money_lst]
