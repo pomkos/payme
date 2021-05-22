@@ -305,6 +305,7 @@ class labelFood:
         st.code(results_str)
         
         with st.beta_expander("See everyone's claimed meals"):
+            st.markdown('<style>[scope="column"] { display: none; }</style>', unsafe_allow_html=True)
             st.table(results)
 
 
