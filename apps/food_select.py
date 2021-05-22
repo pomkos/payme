@@ -145,19 +145,40 @@ class labelFood:
         # number of times each meal was claimed
         all_meals = [x.capitalize() for x in food_dict.keys()]
         meals = all_meals.copy()
+        claimed = {} # first item is claims, second orders
         for meal in all_meals:
             if meal in df_saved["food"].unique():
                 meal_df = df_saved[df_saved["food"] == meal]  # isolate df to just meal
                 amount_claimed = meal_df["amount"].sum()  # num times it was bought
-                if amount_claimed >= food_dict[meal.lower()][1]:
+                amount_bought = food_dict[meal.lower()][1]
+                
+                if amount_claimed >= amount_bought:
                     # if we reached how many times meal was bought, remove
                     # meal from available options
                     meals.remove(meal)
             elif meal.lower() in ["tip", "tax", "fees", "total", "subtotal"]:
                 meals.remove(meal)
-
+            else:
+                # these were not claimed yet, and are not fees
+                amount_claimed = 0
+                amount_bought = food_dict[meal.lower()][1]
+            claimed[meal] = [amount_claimed, amount_bought]
+        self.claimed = claimed
         meals.sort()
         return meals
+    
+    def food_formatter(self, meal_title):
+        '''
+        Formats meal names so it includes amount left to claim by user.
+        '''
+        claimed = self.claimed
+        meal, bought = meal_title.split("(")
+        meal = meal.strip()
+        claims = claimed[meal_title][0]
+        ordered = claimed[meal_title][1]
+        
+        show = meal + f' ({claims}/{ordered} claimed)'
+        return show
 
     def info_gather(self, names, meals, df_saved, food_dict, receipt_name):
         """
@@ -167,7 +188,7 @@ class labelFood:
         name = st.selectbox("Name", options=names)
         colo, cola = st.beta_columns(2)
         with colo:
-            order = st.selectbox("Select an order", options=meals)
+            order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
         num_item = float(food_dict[order.lower()][1])
         receipt_df = df_saved[(df_saved['label'] == receipt_name)]
         receipt_grpd = receipt_df.groupby('food').sum()
