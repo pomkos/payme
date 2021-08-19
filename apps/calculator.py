@@ -194,7 +194,7 @@ def venmo_calc(my_dic, total, description, discount=0 ,tax=0, tip=0, misc_fees=0
         # put it all together
         this_happened = formula + "$" + formula_key + steps
         
-        with st.beta_expander(label='What just happened?'):
+        with st.expander(label='What just happened?'):
             st.write(this_happened)
         rounded_sum = round(rounded_sum,2)
         ### Error catcher ###

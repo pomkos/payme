@@ -71,7 +71,7 @@ def start(button=None):
     # Database section
     
     st.write("Not required, but very fun")
-    col_save,col_show = st.beta_columns([0.33,1])
+    col_save,col_show = st.columns([0.33,1])
 
     with col_show:
         button_show = st.button(label='Preview the Database')
@@ -94,7 +94,7 @@ def manual_input():
     Cut from app() function to make way for screenshot. 
     Manual input of costs, fees, tax, tips.
     '''
-    with st.beta_expander(label='How To'):
+    with st.expander(label='How To'):
         st.write(f"""
             1. Input the name and itemized money spent in a format of:
                 ```
@@ -114,7 +114,7 @@ def manual_input():
             2. Input the rest of the fees or tips as needed""")
 
     receipt_input = st.text_area(label="Add name and food prices*")
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         fees_input = st.number_input("Fees in dollars",step=1.0)
@@ -197,7 +197,7 @@ def venmo_calc(my_dic, total, tax=0, tip=0, misc_fees=0):
             rounded_sum += person_total
             request[key] = person_total
         ### Explain the calculation for transparency ###
-        with st.beta_expander(label='What just happened?'):
+        with st.expander(label='What just happened?'):
             st.write(f"""
             1. Tax% ($p_x$) was calculated using tax/(food_total): __{round(tax_perc*100,2)}%__
             2. Tip% ($p_p$) was calculated using tip/(food_total): __{round(tip_perc*100,2)}%__

@@ -71,7 +71,7 @@ def manual_mode():
     """
     st.title("Venmo Requests Calculator: Manual Mode")
     st.write("Give us some info, we'll give you venmo request links!")
-    with st.beta_expander(label="How To"):
+    with st.expander(label="How To"):
         st.write(
             f"""
             1. Input the name and itemized money spent in a format of:
@@ -123,8 +123,8 @@ def manual_mode():
     description = ph.text_input(
         label="(Optional) Description, like the restaurant name", value=desc_val
     )
-    col1, col2 = st.beta_columns(2)
-    col3, col4 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
 
     with col1:
         fees_input = st.number_input("Fees in dollars", step=1.0, value=fees_val)

@@ -22,7 +22,7 @@ class labelFood:
         except:
             st.error("No receipt submitted. Have the payer add the receipt first!")
             st.stop()
-        with st.beta_expander("How to"):
+        with st.expander("How to"):
             st.write(
                 """
             __Initial Input:__
@@ -186,7 +186,7 @@ class labelFood:
         """
         # gather user info
         name = st.selectbox("Name", options=names)
-        colo, cola = st.beta_columns(2)
+        colo, cola = st.columns(2)
         with colo:
             order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
         num_item = float(food_dict[order.lower()][1])
@@ -304,7 +304,7 @@ class labelFood:
 {line}'''
         st.code(results_str)
         
-        with st.beta_expander("See everyone's claimed meals"):
+        with st.expander("See everyone's claimed meals"):
             st.table(results)
 
 
@@ -379,7 +379,7 @@ class receiptReceiver:
         st.write(f"__Subtotal__ is ${round(subtotal,2)}")
         st.info("Step 2. Add fees, taxes, gratuity")
 
-        col_tax, col_tip = st.beta_columns(2)
+        col_tax, col_tip = st.columns(2)
         with col_tax:
             tax = st.number_input("Taxes ($)", step=1.0)
         with col_tip:

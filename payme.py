@@ -89,8 +89,8 @@ def delivery_brain():
     st.write(
         "Give us the DoorDash or UberEats receipt, we'll spit out some venmo request links!"
     )
-    with st.beta_expander("How To"):
-        col1, col2 = st.beta_columns(2)
+    with st.expander("How To"):
+        col1, col2 = st.columns(2)
         with col1:
             st.write(
                 """
