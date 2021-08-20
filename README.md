@@ -34,7 +34,7 @@ Just a simple repo to calculate how much to request from people after a night ou
 
 ## Venmo Preview
 
-<img src="https://github.com/pomkos/payme/blob/main/images/venmo_preview.png" width="620">
+<img src="https://github.com/pomkos/payme/blob/main/images/venmo_preview.png" width="310">
 
 # How tos
 ## Run
