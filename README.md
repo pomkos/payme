@@ -18,23 +18,23 @@ Just a simple repo to calculate how much to request from people after a night ou
 
 ## Delivery App Mode (default)
 
-![](https://github.com/pomkos/payme/blob/main/images/default_view.png)
+ <img src="https://github.com/pomkos/payme/blob/main/images/default_view.png" width="620"> 
 
 ## Manual Mode
 
-![](https://github.com/pomkos/payme/blob/main/images/manual_mode.png)
+<img src="https://github.com/pomkos/payme/blob/main/images/manual_mode.png" width="620">
 
 ## What Happened
 
-![](https://github.com/pomkos/payme/blob/main/images/what_happened.png)
+<img src="https://github.com/pomkos/payme/blob/main/images/what_happened.png" width="620">
 
 ## Output
 
-![](https://github.com/pomkos/payme/blob/main/images/testaurant_output.png)
+<img src="https://github.com/pomkos/payme/blob/main/images/testaurant_output.png" width="620">
 
 ## Venmo Preview
 
-![](https://github.com/pomkos/payme/blob/main/images/venmo_preview.png)
+<img src="https://github.com/pomkos/payme/blob/main/images/venmo_preview.png" width="620">
 
 # How tos
 ## Run
