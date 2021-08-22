@@ -1,4 +1,4 @@
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://payme.peti.work)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/pomkos/payme/main/payme.py)
 
 # Table of Contents
 
