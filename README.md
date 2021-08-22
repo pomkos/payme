@@ -129,7 +129,7 @@ payme
   |-- images
   |-- .gitignore
   |-- README.md
-  |-- payme.py
+  |-- payme.py              # the brains behind it all, redirects user provided information to the appropriate scripts in apps folder
   |-- requirements.txt
 ```
 
