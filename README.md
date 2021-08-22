@@ -13,7 +13,8 @@
     1. [Run](#run)
     2. [Host](#host)
 4. [Outline](#outline)
-    1. [Databases](#databases)
+    1. [Code Structure](#code)
+    2. [Databases](#databases)
 
 # PayMe
 Just a simple repo to calculate how much to request from people after a night out
