@@ -108,6 +108,8 @@ crontab -e
 
 ## Databases
 
+These are created and updated with the `db_tool.py` class functions.
+
 ### Food.db
 
 #### receipt table
@@ -120,7 +122,7 @@ Stores information from the complex receipt receiver on payme
 
 #### food table
 
-Stores information from the claim your meal section on payme
+Stores information from the claim your meal section on payme. This is what is shown when users click "see everyone's claimed meals"
 
 | name  | food                                | price | amount | total_item_price | label              |
 | ----- | ----------------------------------- | ----- | ------ | ---------------- | ------------------ |
@@ -140,7 +142,6 @@ Stores information from the claim your meal section on payme
 | rate     | country        | currency       | code | date_updated |
 | -------- | -------------- | -------------- | ---- | ------------ |
 | 0.729266 | United Kingdom | Pound Sterling | GBP  | 2021-03-25   | 
-
 ### Names.db
 
 #### names table
