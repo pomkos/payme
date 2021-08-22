@@ -213,7 +213,7 @@ class labelFood:
         with cola:
             left_to_claim = round(num_item - amt_order_recorded,2)
             amount = round(st.number_input(
-                f"How many? (Left to claim: {left_to_claim})", step=1.0, max_value=left_to_claim, min_value=-amt_order_recorded
+                f"How many? (Left to claim: {left_to_claim})", step=1.0, max_value=left_to_claim, min_value=0.0
             ),2)
 
         return order, amount
