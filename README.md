@@ -108,9 +108,31 @@ crontab -e
 
 # Outline
 
-## Databases
+## Code
 
-These are created and updated with the `db_tool.py` class functions.
+The codebase is organized as such:
+
+```
+payme
+  |-- apps
+      |-- calculator.py     # called by all scripts for the actual calculations
+      |-- db_tool.py        # includes helper class to connect to sqlite db and extract currency info
+      |-- doordash.py       # specific to doordash receipts, extracts all info
+      |-- food_select.py    # used by the complex receipt receiver and the claim your meal pages
+      |-- manual_mode.py    # used by default view of payme, using user provided info
+      |-- ubereats.py       # specific to ubereats receipts, extracts all info
+  |-- data
+      |-- currency.db       # stores currency, country, rate info
+      |-- food.db           # stores complex receipt info so users can select foods
+      |-- names.db          # stores names, variations of names, and mispellings to automatically parse these from all inputs
+  |-- images
+  |-- .gitignore
+  |-- README.md
+  |-- payme.py
+  |-- requirements.txt
+```
+
+## Databases
 
 ### Food.db
 
@@ -134,16 +156,12 @@ Stores information from the claim your meal section on payme. This is what is sh
 
 #### country_currency table
 
-Imported using `db_tool` by `calculator` to convert currency to user selected country rate
-
 | country        | currency       | code |
 | -------------- | -------------- | ---- |
 | United Kingdom | Pound Sterling | GBP  | 
 
 
 #### currency_rates table
-
-Imported using `db_tool` by `calculator` to convert currency to user selected country rate
 
 | rate     | country        | currency       | code | date_updated |
 | -------- | -------------- | -------------- | ---- | ------------ |
