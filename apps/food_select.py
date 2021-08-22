@@ -28,6 +28,7 @@ class labelFood:
             __Initial Input:__
             
             1. Select receipt
+            1. Select mode. Remove mode allows you to undo prior claims
             1. Choose your name
             1. Select your order (or an order you shared)
             1. Add how many you ordered. If order was split with three people, just add your portion (ex: if 33%, enter 0.33)
@@ -77,7 +78,7 @@ class labelFood:
             st.table(show_claims)
             st.stop()
         names = self.name_chooser(df_saved, names_list)
-        meals = self.meal_chooser(df_saved, food_dict)
+        meals, claimed_meals = self.meal_chooser(df_saved, food_dict)
         if not meals:
             ph_show.empty()
             # if no meals in the list, then we're done. Just show the df.
@@ -85,13 +86,20 @@ class labelFood:
             results = df_saved[df_saved['label'] == selected]
             self.results_formatter(results, data2)
             st.stop()
-        name, order, amount = self.info_gather(names, meals, df_saved, food_dict, selected)
+
+        mode = st.selectbox("Choose mode", options=['Claim', 'Remove'])
+        name = name = st.selectbox("Name", options=names)
+        if (mode == 'Claim'):
+            order, amount = self.info_gather(meals, df_saved, food_dict, selected)
+        else:
+            order, amount = self.info_gather_remove(claimed_meals, df_saved, selected)
         self.ph_info = st.empty()
         self.ph_table = st.empty()
 
         if not amount or not order or not name:
             self.ph_info.info(
-                "Step 1. Select the meal you ordered or shared, and write the amount of each. If shared, use fractions."
+                "Step 1. Select the meal you ordered or shared, and write the amount of each. If shared, use fractions. " + 
+                "Optionally, select meal claims you wish to remove."
             )
             with self.ph_table.beta_container():
                 st.write("__Your Submissions__")
@@ -145,6 +153,7 @@ class labelFood:
         # number of times each meal was claimed
         all_meals = [x.capitalize() for x in food_dict.keys()]
         meals = all_meals.copy()
+        claimed_meals = []
         claimed = {} # first item is claims, second orders
         for meal in all_meals:
             if meal in df_saved["food"].unique():
@@ -156,6 +165,10 @@ class labelFood:
                     # if we reached how many times meal was bought, remove
                     # meal from available options
                     meals.remove(meal)
+
+                if amount_claimed > 0.0:
+                    claimed_meals.append(meal)
+
             elif meal.lower() in ["tip", "tax", "fees", "total", "subtotal"]:
                 meals.remove(meal)
             else:
@@ -165,14 +178,16 @@ class labelFood:
             claimed[meal] = [amount_claimed, amount_bought]
         self.claimed = claimed
         meals.sort()
-        return meals
+        claimed_meals.sort()
+        return meals, claimed_meals
     
     def food_formatter(self, meal_title):
         '''
         Formats meal names so it includes amount left to claim by user.
         '''
         claimed = self.claimed
-        meal, bought = meal_title.split("(")
+
+        meal, *rest = meal_title.split("(")
         meal = meal.strip()
         claims = claimed[meal_title][0]
         ordered = claimed[meal_title][1]
@@ -180,12 +195,10 @@ class labelFood:
         show = meal + f' ({claims}/{ordered} claimed)'
         return show
 
-    def info_gather(self, names, meals, df_saved, food_dict, receipt_name):
+    def info_gather(self, meals, df_saved, food_dict, receipt_name):
         """
-        Gathers info from user
+        Gathers info from user regarding claims
         """
-        # gather user info
-        name = st.selectbox("Name", options=names)
         colo, cola = st.columns(2)
         with colo:
             order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
@@ -200,10 +213,31 @@ class labelFood:
         with cola:
             left_to_claim = round(num_item - amt_order_recorded,2)
             amount = round(st.number_input(
-                f"How many? (Left to claim: {left_to_claim})", step=1.0, max_value=left_to_claim, min_value=0.0
+                f"How many? (Left to claim: {left_to_claim})", step=1.0, max_value=left_to_claim, min_value=-amt_order_recorded
             ),2)
 
-        return name, order, amount
+        return order, amount
+
+    def info_gather_remove(self, meals, df_saved, receipt_name):
+        """
+        Gathers info from user regarding removal claims
+        """
+        colo, cola = st.columns(2)
+        with colo:
+            order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
+        receipt_df = df_saved[(df_saved['label'] == receipt_name)]
+        receipt_grpd = receipt_df.groupby('food').sum()
+        try:
+            amt_order_recorded = receipt_grpd.loc[order,'amount']
+        except:
+            amt_order_recorded = 0.0
+        
+        with cola:
+            amount = round(st.number_input(
+                f"How many? (Left to remove: {amt_order_recorded})", step=1.0, max_value=0.0, min_value=-amt_order_recorded
+            ),2)
+        
+        return order, amount
 
     def user_choose_meal(self, amount, order, name, food_dict):
         """
