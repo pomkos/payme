@@ -132,12 +132,16 @@ Stores information from the claim your meal section on payme. This is what is sh
 
 #### country_currency table
 
+Imported using `db_tool` by `calculator` to convert currency to user selected country rate
+
 | country        | currency       | code |
 | -------------- | -------------- | ---- |
 | United Kingdom | Pound Sterling | GBP  | 
 
 
 #### currency_rates table
+
+Imported using `db_tool` by `calculator` to convert currency to user selected country rate
 
 | rate     | country        | currency       | code | date_updated |
 | -------- | -------------- | -------------- | ---- | ------------ |
