@@ -103,3 +103,50 @@ crontab -e
 ```
 
 5. Access the website at `localhost:8503`
+
+# Outline
+
+## Databases
+
+### Food.db
+
+#### receipt table
+
+Stores information from the complex receipt receiver on payme
+
+| item                            | price | amount | name                 | people                                | date       |
+| ------------------------------- | ----- | ------ | -------------------- | ------------------------------------- | ---------- |
+| Buck to the Future (1.0 bought) | 14.0  | 1.0    | Roosevelt Room_05-21 | Peter, Matt, Steve, Julie, Aron, Kyle | 2021-05-21 | 
+
+#### food table
+
+Stores information from the claim your meal section on payme
+
+| name  | food                                | price | amount | total_item_price | label              |
+| ----- | ----------------------------------- | ----- | ------ | ---------------- | ------------------ |
+| Peter | [dessert] medovik cake (1.0 bought) | 8.00  | 1.0    | 8.00             | Russia House_05-02 | 
+
+### Currency.db
+
+#### country_currency table
+
+| country        | currency       | code |
+| -------------- | -------------- | ---- |
+| United Kingdom | Pound Sterling | GBP  | 
+
+
+#### currency_rates table
+
+| rate     | country        | currency       | code | date_updated |
+| -------- | -------------- | -------------- | ---- | ------------ |
+| 0.729266 | United Kingdom | Pound Sterling | GBP  | 2021-03-25   | 
+
+### Names.db
+
+#### names table
+
+Just a database of names with different spellings, for easier parsing of info
+
+| names  |     |
+| ------ | --- |
+| bl@ise |     |
