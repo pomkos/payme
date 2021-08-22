@@ -234,10 +234,10 @@ class labelFood:
         
         with cola:
             amount = round(st.number_input(
-                f"How many? (Left to remove: {amt_order_recorded})", step=1.0, max_value=0.0, min_value=-amt_order_recorded
+                f"How many? (Left to remove: {amt_order_recorded})", step=1.0, max_value=amt_order_recorded, min_value=0.0
             ),2)
         
-        return order, amount
+        return order, -amount
 
     def user_choose_meal(self, amount, order, name, food_dict):
         """
