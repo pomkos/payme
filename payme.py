@@ -29,6 +29,7 @@ def start():
     """
     Thalamus. Creates the GUI and redirects requests to the appropriate scripts. The Thalamus.
     """
+    st.sidebar.write('[Github](https://github.com/pomkos/payme)')
     action = st.sidebar.radio(
         "Choose an action", options=["Get venmo links", "Claim meals", "Submit receipt"]
     )
