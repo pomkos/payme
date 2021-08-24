@@ -293,7 +293,7 @@ class receiptFormat():
           )+
         )
         '''
-        self.pattern = '((?:[A-Za-z ,:])+)((?:[\\d.]+[, ]*)+)'
+        self.pattern = '((?:[A-Za-z ,:])+)((?:[?\-\\d.]+[, ]*)+)'
 
     def parse_alpha(self,alpha):
         'Splits string on delimiter including "and" "<space>" ":" ","'
@@ -301,7 +301,7 @@ class receiptFormat():
 
     def parse_numbers(self,numbers):
         'Splits "12.2 12.3 56 53.2" -> "[12.2,12.3,56,53.2]"'
-        return list(filter(None, re.split('(?:[^\\d\\.])', numbers)))
+        return list(filter(None, re.split('(?:[^\\d\\.\-])', numbers)))
 
 def total_calculator(description, receipt_input, fees_input, tax_input, tip_input, discount, contribution=0):
     """
