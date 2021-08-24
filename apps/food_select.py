@@ -98,7 +98,7 @@ class labelFood:
                 "Step 1. Select the meal you ordered or shared, and write the amount of each. If shared, use fractions. " + 
                 "Optionally, select meal claims you wish to remove."
             )
-            with self.ph_table.beta_container():
+            with self.ph_table.container():
                 st.write("__Your Submissions__")
                 user_table = df_saved[(df_saved['label']==selected) & (df_saved['name']==name)]
                 st.table(user_table)
@@ -254,7 +254,7 @@ class labelFood:
 
         # calculate and present user's taxes, tips, subtotal, total
         user_subtotal = sum(receipt_df["total_item_price"])
-        with self.ph_table.beta_container():
+        with self.ph_table.container():
             st.write("__Your item__")
             st.table(receipt_df)
 
