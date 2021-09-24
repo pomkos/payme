@@ -6,6 +6,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import sqlalchemy as sq
+import datetime as dt
 
 engine = sq.create_engine("sqlite:///data/food.db", connect_args={"check_same_thread":False})
 cnx = engine.connect()
