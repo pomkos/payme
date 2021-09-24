@@ -6,6 +6,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import sqlalchemy as sq
+import datetime as dt
 
 engine = sq.create_engine("sqlite:///data/food.db", connect_args={"check_same_thread":False})
 cnx = engine.connect()
@@ -89,7 +90,7 @@ class labelFood:
 
         mode = st.selectbox("Choose mode", options=['Claim', 'Remove'])
         name = name = st.selectbox("Name", options=names)
-        order, amount = self.info_gather(meals, df_saved, food_dict, selected, mode)
+        order, amount = self.info_gather(meals, claimed_meals, df_saved, food_dict, selected, mode)
         self.ph_info = st.empty()
         self.ph_table = st.empty()
 
@@ -192,13 +193,16 @@ class labelFood:
         show = meal + f' ({claims}/{ordered} claimed)'
         return show
 
-    def info_gather(self, meals, df_saved, food_dict, receipt_name, mode):
+    def info_gather(self, meals, claimed_meals, df_saved, food_dict, receipt_name, mode):
         """
         Gathers info from user regarding claims
         """
         colo, cola = st.columns(2)
         with colo:
-            order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
+            if (mode == 'Claim'):
+                order = st.selectbox("Select an order", options=meals, format_func=self.food_formatter)
+            else:
+                order = st.selectbox("Select an order", options=claimed_meals, format_func=self.food_formatter)
         receipt_df = df_saved[(df_saved['label'] == receipt_name)]
         receipt_grpd = receipt_df.groupby('food').sum()
 
