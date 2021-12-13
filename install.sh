@@ -10,7 +10,7 @@ read input
 function edit_cron(){
     crontab -l > file
     echo "# start after each reboot" >> file
-    echo "@reboot      $HOME/projects/payme/start_me.sh" >> file
+    echo "@reboot      $HOME/projects/payme/start_me.sh > $HOME/projects/payme/start_me.log 2>&1" >> file
     crontab file
     rm file
     echo "payme will start every reboot"
