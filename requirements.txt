@@ -7,3 +7,4 @@ SQLAlchemy
 pytz
 Pillow
 python_magic
+js2py
